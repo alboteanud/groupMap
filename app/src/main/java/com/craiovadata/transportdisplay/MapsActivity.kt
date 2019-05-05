@@ -12,14 +12,13 @@ import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
+import com.google.firebase.firestore.*
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
-
+    private val db = FirebaseFirestore.getInstance()
     private val tag = MapsActivity::class.java.simpleName
     private val mMarkers = hashMapOf<String, Marker>()
 
@@ -69,25 +68,43 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    // Access a Cloud Firestore instance from your Activity
-    val db = FirebaseFirestore.getInstance()
+    private var registration: ListenerRegistration? = null
 
     private fun subscribeToUpdates() {
 
-        db.collection("data")
-            .get()
-            .addOnSuccessListener { result ->
+       val query = db.collection("data")
+//            .whereEqualTo("state", "CA")
+        registration = query
+                .addSnapshotListener(EventListener<QuerySnapshot> { snapshots, e ->
+                if (e != null) {
+                    Log.w(tag, "listen:error", e)
+                    return@EventListener
+                }
 
-                setMarker(result)
-            }
-            .addOnFailureListener { exception ->
-                Log.w(tag, "Error getting documents.", exception)
-            }
+                for (dc in snapshots!!.documentChanges) {
+                    when (dc.type) {
+                        DocumentChange.Type.ADDED -> {
+                            Log.d(tag, "New doc: ${dc.document.data}")
+                            setMarker(dc.document)
+                        }
+                        DocumentChange.Type.MODIFIED -> {
+                            Log.d(tag, "Modified doc: ${dc.document.data}")
+                            setMarker(dc.document)
+                        }
+                        DocumentChange.Type.REMOVED -> Log.d(tag, "Removed doc: ${dc.document.data}")
+                    }
+                }
+            })
 
     }
 
-    private fun setMarker(querySnapshot: QuerySnapshot) {
-        for (document in querySnapshot) {
+    override fun onStop() {
+        super.onStop()
+        // Stop listening to changes
+//        registration?.remove()
+    }
+
+    private fun setMarker(document: QueryDocumentSnapshot) {
         Log.d(tag, "${document.id} => ${document.data}")
 
             // When a location update is received, put or update
@@ -95,9 +112,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             // for locations received, so that we can build the
             // boundaries required to show them all on the map at once
             val key = document.id
-            val value = document.data
-            val lat = java.lang.Double.parseDouble(value["latitude"].toString())
-            val lng = java.lang.Double.parseDouble(value["longitude"].toString())
+            val data = document.data
+            val lat = data["latitude"] as Double
+            val lng = data["longitude"] as Double
             val location = LatLng(lat, lng)
             if (!mMarkers.containsKey(key)) {
                 val marker = mMap.addMarker(MarkerOptions().title(key).position(location))
@@ -106,7 +123,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 mMarkers[key]?.position = location
             }
 
-    }
 
         val builder = LatLngBounds.Builder()
         for (marker in mMarkers.values) {
