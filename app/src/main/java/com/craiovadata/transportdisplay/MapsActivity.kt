@@ -1,16 +1,18 @@
 package com.craiovadata.transportdisplay
 
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.LatLngBounds
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.*
 
@@ -31,23 +33,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-
-        // Add a marker in Sydney and move the camera
-//        val sydney = LatLng(-34.0, 151.0)
-//        mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-//        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
-
         mMap.setMaxZoomPreference(16f)
         loginToFirebase()
     }
@@ -68,67 +55,69 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private var registration: ListenerRegistration? = null
-
     private fun subscribeToUpdates() {
-
-       val query = db.collection("data")
-//            .whereEqualTo("state", "CA")
-        registration = query
-                .addSnapshotListener(EventListener<QuerySnapshot> { snapshots, e ->
+        db.collection("data")
+            .addSnapshotListener(EventListener<QuerySnapshot> { snapshots, e ->
                 if (e != null) {
                     Log.w(tag, "listen:error", e)
                     return@EventListener
                 }
-
                 for (dc in snapshots!!.documentChanges) {
                     when (dc.type) {
-                        DocumentChange.Type.ADDED -> {
-                            Log.d(tag, "New doc: ${dc.document.data}")
-                            setMarker(dc.document)
-                        }
-                        DocumentChange.Type.MODIFIED -> {
-                            Log.d(tag, "Modified doc: ${dc.document.data}")
-                            setMarker(dc.document)
-                        }
+                        DocumentChange.Type.ADDED -> setMarker(dc.document)
+                        DocumentChange.Type.MODIFIED -> setMarker(dc.document)
                         DocumentChange.Type.REMOVED -> Log.d(tag, "Removed doc: ${dc.document.data}")
                     }
                 }
             })
-
-    }
-
-    override fun onStop() {
-        super.onStop()
-        // Stop listening to changes
-//        registration?.remove()
     }
 
     private fun setMarker(document: QueryDocumentSnapshot) {
-        Log.d(tag, "${document.id} => ${document.data}")
-
-            // When a location update is received, put or update
-            // its value in mMarkers, which contains all the markers
-            // for locations received, so that we can build the
-            // boundaries required to show them all on the map at once
-            val key = document.id
-            val data = document.data
-            val lat = data["latitude"] as Double
-            val lng = data["longitude"] as Double
-            val location = LatLng(lat, lng)
-            if (!mMarkers.containsKey(key)) {
-                val marker = mMap.addMarker(MarkerOptions().title(key).position(location))
-                mMarkers[key] = marker
-            } else {
-                mMarkers[key]?.position = location
-            }
-
-
+        // When a location update is received, put or update
+        // its value in mMarkers, which contains all the markers
+        // for locations received, so that we can build the
+        // boundaries required to show them all on the map at once
+        val key = document.id
+        val lat = document.data["latitude"] as Double
+        val lng = document.data["longitude"] as Double
+        val location = LatLng(lat, lng)
+        if (!mMarkers.containsKey(key)) {
+            val marker = mMap.addMarker(MarkerOptions().title(key).position(location))
+            val iconUrl = document.data["provider"] as String
+            setMarkerIcon(marker, iconUrl)
+            mMarkers[key] = marker
+        } else {
+            mMarkers[key]?.position = location
+        }
         val builder = LatLngBounds.Builder()
         for (marker in mMarkers.values) {
             builder.include(marker.position)
         }
         mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 300))
+
     }
+
+    private fun setMarkerIcon(marker: Marker, iconUrl: String) {
+        Glide.with(applicationContext)
+            .asBitmap()
+            .load(iconUrl)
+            .into(object : CustomTarget<Bitmap>() {
+
+                override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
+                    val icon = BitmapDescriptorFactory.fromBitmap(resource)
+                    marker.setIcon(icon)
+                }
+
+                override fun onLoadFailed(errorDrawable: Drawable?) {
+                    super.onLoadFailed(errorDrawable)
+                    val icon = BitmapDescriptorFactory.fromResource(R.mipmap.ic_test)
+                    marker.setIcon(icon)
+                }
+
+                override fun onLoadCleared(placeholder: Drawable?) {}
+
+            })
+    }
+
 
 }
