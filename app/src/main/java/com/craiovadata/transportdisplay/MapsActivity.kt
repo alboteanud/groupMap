@@ -1,9 +1,12 @@
 package com.craiovadata.transportdisplay
 
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
@@ -110,13 +113,38 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
                 override fun onLoadFailed(errorDrawable: Drawable?) {
                     super.onLoadFailed(errorDrawable)
-                    val icon = BitmapDescriptorFactory.fromResource(R.mipmap.ic_test)
+                    val icon = BitmapDescriptorFactory.fromResource(R.drawable.ic_person_pin)
                     marker.setIcon(icon)
                 }
 
                 override fun onLoadCleared(placeholder: Drawable?) {}
 
             })
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        return when (item.itemId) {
+            R.id.action_settings -> {
+//                startActivity(Intent(this, SettingsActivity::class.java))
+                return true
+            } R.id.action_create_group -> {
+                startActivity(Intent(this, CreateGroupActivity::class.java))
+                return true
+            } R.id.action_find_group -> {
+//                startActivity(Intent(this, SettingsActivity::class.java))
+                return true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
 
