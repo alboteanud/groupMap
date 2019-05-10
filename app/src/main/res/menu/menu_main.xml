@@ -5,21 +5,30 @@
 
     <item
         android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="@string/action_settings"
-        app:showAsAction="never" />
+        android:title="@string/action_settings" />
 
     <item
         android:id="@+id/action_create_group"
-        android:orderInCategory="100"
-        android:title="@string/action_create_group"
-        app:showAsAction="never" />
+        android:title="@string/action_create_group" />
 
     <item
-        android:id="@+id/action_find_group"
-        android:orderInCategory="100"
-        android:title="@string/action_find_group"
-        app:showAsAction="never" />
+        android:id="@+id/action_my_groups"
+        android:title="My groups" />
+
+    <item
+        android:id="@+id/action_refresh"
+        android:title="Refresh" />
+
+    <item
+        android:id="@+id/action_group_members"
+        android:title="Members" />
+
+    <item
+        android:id="@+id/action_privacy_policy"
+        android:title="Privacy policy" />
+ <item
+        android:id="@+id/action_join_group_x"
+        android:title="Join group X" />
 
 
 </menu>
