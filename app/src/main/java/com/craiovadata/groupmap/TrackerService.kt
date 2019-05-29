@@ -40,7 +40,6 @@ class TrackerService : Service() {
         super.onCreate()
         buildNotification()
 //        loginToFirebase()
-
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
