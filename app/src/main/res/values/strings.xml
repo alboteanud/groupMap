@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Map</string>
-    <string name="title_activity_maps">People map</string>
+    <string name="title_activity_maps">Group map</string>
     <string name="action_settings">Settings</string>
     <string name="action_create_group">New group</string>
     <string name="action_find_group">Find group</string>
@@ -16,4 +16,6 @@
     <string name="toast_group_created_success">The group was created</string>
     <string name="toast_group_creation_error">Error creating the group</string>
     <string name="error_msg_title_not_blank">This field can not be blank</string>
+    <string name="connection_error">Connection error</string>
+    <string name="error_default">Error default</string>
 </resources>

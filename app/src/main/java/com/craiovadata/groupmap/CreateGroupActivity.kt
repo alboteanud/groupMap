@@ -1,4 +1,4 @@
-package com.craiovadata.transportdisplay
+package com.craiovadata.groupmap
 
 import android.app.Activity
 import android.content.Context
@@ -9,7 +9,10 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.craiovadata.groupmap.MapsActivity.Companion.GROUPS
+import com.craiovadata.groupmap.MapsActivity.Companion.USERS
 import com.firebase.ui.auth.AuthUI
+import com.firebase.ui.auth.ErrorCodes
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -20,24 +23,24 @@ import kotlinx.android.synthetic.main.content_create_group.*
 class CreateGroupActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
+    private lateinit var db: FirebaseFirestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create_group)
         setSupportActionBar(toolbar)
         auth = FirebaseAuth.getInstance()
-        buttonCreateGroup.setOnClickListener { view -> onButtonCreateGroupClicked(view) }
+        db = FirebaseFirestore.getInstance()
+        buttonCreateGroup.setOnClickListener { view -> onCreateGroupClicked(view) }
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
 
-    private fun onButtonCreateGroupClicked(view: View) {
+    private fun onCreateGroupClicked(view: View) {
         val currentUser = auth.currentUser
         if (currentUser == null) {
             startLoginActivity()
         } else {
-//            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show()
-            addGroupToFirebase(currentUser)
-
+            createGroup(currentUser)
         }
     }
 
@@ -55,50 +58,9 @@ class CreateGroupActivity : AppCompatActivity() {
         )
     }
 
-    private fun addGroupToFirebase(currentUser: FirebaseUser) {
-        val groupName = editTextGroupName.text.toString()
-        if (TextUtils.isEmpty(groupName)) {
-            val errMsg = getString(R.string.error_msg_title_not_blank)
-            editTextGroupName.error = errMsg
-            return
-        }
-        val user = HashMap<String, Any?>()
-        user["name"] = currentUser.displayName
-        user["uid"] = currentUser.uid
-        user["photoUrl"] = currentUser.photoUrl?.toString()
-        user["email"] = currentUser.email
-
-        val group = HashMap<String, Any?>()
-        group["groupName"] = groupName
-        group["admins"] = listOf(user)
-
-        val db = FirebaseFirestore.getInstance()
-        val groupRef = db.collection("groups").document()
-        val memberRef = groupRef.collection("members").document(currentUser.uid)
-
-        val batch = db.batch()
-        batch.set(groupRef, group)
-        batch.set(memberRef, user)
-        batch.commit().addOnCompleteListener {task ->
-           if (task.isSuccessful){
-               Log.d(TAG, "DocumentSnapshot written with ID: ${groupRef.id}")
-               getSharedPreferences("_", Context.MODE_PRIVATE).edit().putString("groupId", groupRef.id).apply()
-               val msg = getString(R.string.toast_group_created_success)
-               Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
-               finish()
-           } else {
-               Log.w(TAG, "Error adding document", task.exception)
-               val msg = getString(R.string.toast_group_creation_error)
-               Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
-           }
-        }
-    }
-
     public override fun onStart() {
         super.onStart()
-        // Check if user is signed in (non-null) and update UI accordingly.
-        val currentUser = auth.currentUser
-        updateUI(currentUser)
+        updateUI(auth.currentUser)
     }
 
     private fun updateUI(user: FirebaseUser?) {
@@ -110,6 +72,7 @@ class CreateGroupActivity : AppCompatActivity() {
         }
     }
 
+    // sign in result
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -118,14 +81,66 @@ class CreateGroupActivity : AppCompatActivity() {
 
             if (resultCode == Activity.RESULT_OK) {
                 // Successfully signed in
-                val user = FirebaseAuth.getInstance().currentUser
-                updateUI(user)
-                // ...
+                updateUI(auth.currentUser)
             } else {
                 // Sign in failed. If response is null the user canceled the
                 // sign-in flow using the back button. Otherwise check
                 // response.getError().getErrorCode() and handle the error.
                 // ...
+                if (response == null) {
+                    // User pressed the back button.
+                    return
+                }
+                if (response.error?.errorCode == ErrorCodes.NO_NETWORK) {
+                    Toast.makeText(this, getString(R.string.connection_error), Toast.LENGTH_SHORT).show();
+                    return
+                }
+
+                if (response.error?.errorCode == ErrorCodes.UNKNOWN_ERROR) {
+                    Toast.makeText(this, getString(R.string.error_default), Toast.LENGTH_SHORT).show();
+                    return
+                }
+            }
+        }
+    }
+
+    private fun createGroup(currentUser: FirebaseUser) {
+        val groupName = editTextGroupName.text.toString()
+        if (TextUtils.isEmpty(groupName)) {
+            val errMsg = getString(R.string.error_msg_title_not_blank)
+            editTextGroupName.error = errMsg
+            return
+        }
+        val userData = HashMap<String, Any?>()
+        userData["uid"] = currentUser.uid
+        val groupData = HashMap<String, Any?>()
+        groupData["groupName"] = groupName
+        groupData["founder"] = userData
+
+        val refGroup = db.collection(GROUPS).document(MapsActivity.defaultGroupId)
+        val groupId = refGroup.id
+
+        val refUserGroup = db.collection(USERS).document(currentUser.uid)
+            .collection(GROUPS).document(groupId)
+        val dataJoined = HashMap<String, Any?>()
+        dataJoined[MapsActivity.JOINED]= true
+
+        val batch = db.batch()
+        batch.set(refGroup, groupData)
+        batch.set(refUserGroup, dataJoined)
+
+        batch.commit().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+
+                getSharedPreferences("_", Context.MODE_PRIVATE).edit()
+                    .putString(KEY_GROUP_ID, groupId).apply()
+                val msg = getString(R.string.toast_group_created_success)
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                finish()
+            } else {
+                Log.w(TAG, "Error adding document", task.exception)
+                val msg = getString(R.string.toast_group_creation_error)
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -133,6 +148,7 @@ class CreateGroupActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "CreateGroupActivity"
         private const val RC_SIGN_IN = 9001
+        const val KEY_GROUP_ID = "groupId"
     }
 
 }

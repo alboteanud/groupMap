@@ -1,4 +1,4 @@
-package com.craiovadata.transportdisplay
+package com.craiovadata.groupmap
 
 import androidx.test.InstrumentationRegistry
 import androidx.test.runner.AndroidJUnit4

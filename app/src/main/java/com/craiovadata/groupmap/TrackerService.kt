@@ -1,4 +1,4 @@
-package com.craiovadata.transportdisplay
+package com.craiovadata.groupmap
 
 //import com.google.firebase.database.FirebaseDatabase
 import android.Manifest
@@ -23,11 +23,14 @@ import com.google.android.gms.location.LocationServices
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
+import com.google.firebase.iid.FirebaseInstanceId
 
 
 class TrackerService : Service() {
 
     private val tag = TrackerService::class.java.simpleName
+    var user: FirebaseUser? = null
 
     override fun onBind(intent: Intent): IBinder? {
         return null
@@ -36,7 +39,33 @@ class TrackerService : Service() {
     override fun onCreate() {
         super.onCreate()
         buildNotification()
-        loginToFirebase()
+//        loginToFirebase()
+
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
+        intent?.let {
+            if (it.hasExtra("groupId")) {
+                val groupId = it.getStringExtra("groupId")
+                val currentUser = FirebaseAuth.getInstance().currentUser ?: return@let
+
+                // get registration token
+                FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { result ->
+                    val token = result.token
+//                    val ref = db.collection(MapsActivity.FCM_TOKENS).document(token)
+//                    val userData = HashMap<String, Any?>()
+//                    userData["uid"] = currentUser.uid
+//                    ref.set(userData)
+
+                    requestLocationUpdates(groupId, token)
+                }
+
+
+            }
+        }
+
+        return super.onStartCommand(intent, flags, startId)
     }
 
     private fun buildNotification() {
@@ -78,7 +107,6 @@ class TrackerService : Service() {
         }
     }
 
-    var user: FirebaseUser? = null
 
 
     private fun loginToFirebase() {
@@ -98,21 +126,19 @@ class TrackerService : Service() {
         user = FirebaseAuth.getInstance().currentUser
 
         if (user != null) {
-            requestLocationUpdates()
+//            requestLocationUpdates(groupId, token)
         }
 
     }
 
-    // Access a Cloud Firestore instance from your Activity
-    val db = FirebaseFirestore.getInstance()
-
-    private fun requestLocationUpdates() {
+    private fun requestLocationUpdates(groupId: String, token: String) {
         val request = LocationRequest()
         request.interval = 10000
         request.fastestInterval = 5000
+        request.numUpdates = 2
         request.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         val client = LocationServices.getFusedLocationProviderClient(this)
-        val path = getString(R.string.firebase_path) + "/" + getString(R.string.transport_id)
+//        val path = getString(R.string.firebase_path) + "/" + getString(R.string.transport_id)
         val permission = ContextCompat.checkSelfPermission(
             this,
             Manifest.permission.ACCESS_FINE_LOCATION
@@ -124,13 +150,17 @@ class TrackerService : Service() {
                 override fun onLocationResult(locationResult: LocationResult?) {
 //                    val ref = FirebaseDatabase.getInstance().getReference(path)
                     val location = locationResult!!.lastLocation
-                    location.provider = user?.photoUrl.toString()
+//                    location.provider = user?.photoUrl.toString()
                     if (location != null) {
                         Log.d(tag, "location update $location")
 //                        ref.setValue(location)
-                        db.collection("data")
-                            .document("client_2")
-                            .set(location)
+                        val locationData = HashMap<String, Any?>()
+                        locationData["location"] = location
+                        val db = FirebaseFirestore.getInstance()
+                        db.collection("groups").document(groupId).collection("devices")
+                            .document(token)
+                            .set(locationData, SetOptions.merge())
+//                        stopSelf()
                     }
 
 

@@ -1,4 +1,4 @@
-package com.craiovadata.transportdisplay
+package com.craiovadata.groupmap
 
 import android.Manifest
 import android.app.Activity
@@ -20,7 +20,9 @@ import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
+import com.craiovadata.groupmap.CreateGroupActivity.Companion.KEY_GROUP_ID
 import com.firebase.ui.auth.AuthUI
+import com.firebase.ui.auth.ErrorCodes
 import com.firebase.ui.auth.IdpResponse
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -32,38 +34,92 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.*
+import com.google.firebase.iid.FirebaseInstanceId
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
-    private val db = FirebaseFirestore.getInstance()
+    private lateinit var auth: FirebaseAuth
+    private lateinit var db: FirebaseFirestore
     private val mMarkers = hashMapOf<String, Marker>()
-    lateinit var groupId: String
+    private lateinit var groupId: String
+//    private var token: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
+        db = FirebaseFirestore.getInstance()
+        auth = FirebaseAuth.getInstance()
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        auth.addAuthStateListener { auth ->
+            Toast.makeText(this, "User: " + auth.currentUser?.email, Toast.LENGTH_SHORT).show()
+            if (auth.currentUser != null) {
+                saveMessagingDeviceToken()
+            } else {
+                // todo NOT_AUTH but needs write permission
+                deleteMessagingDeviceToken()
+            }
+        }
+    }
+
+    private fun saveMessagingDeviceToken() {
+        FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { result ->
+            val currentUser = auth.currentUser ?: return@addOnSuccessListener
+            val token = result.token
+            val ref = db.collection(FCM_TOKENS).document(token)
+            val userData = HashMap<String, Any?>()
+            userData["uid"] = currentUser.uid
+            ref.set(userData)
+        }
+    }
+
+    private fun deleteMessagingDeviceToken() {
+        FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { result ->
+            val token = result.token
+            val ref = db.collection(FCM_TOKENS).document(token)
+            ref.delete()
+        }
     }
 
     override fun onStart() {
         super.onStart()
-        groupId = getSharedPreferences("_", Context.MODE_PRIVATE).getString("groupId", "bfpirzoq2Fvl9rMHndzZ")
+        groupId = getSharedPreferences("_", MODE_PRIVATE).getString(KEY_GROUP_ID,
+            defaultGroupId
+        ) ?: defaultGroupId
         checkLocationPermission()
-        subscribeToGroupUpdates()
+        subscribeToGroupUpdates(groupId)
+    }
+
+    private fun requestPositionUpdates() {
+        val currentUser = auth.currentUser
+
+      if (currentUser!=null){
+          // Update one field, creating the document if it does not already exist.
+          val requestData = HashMap<String, Any?>()
+          requestData["uid"] = currentUser.uid
+          requestData["name"] = currentUser.displayName ?: currentUser.email
+          requestData["time"] = FieldValue.serverTimestamp()
+          val request = HashMap<String, Any>()
+          request[UPDATE_REQUEST] = requestData
+
+          db.collection(GROUPS).document(groupId).set(request, SetOptions.merge())
+      } else {
+          Toast.makeText(this, "Login to get positions", Toast.LENGTH_SHORT).show()
+      }
+
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         mMap.setMaxZoomPreference(16f)
 //        loginToFirebase()
-        subscribeToGroupUpdates()
-        requestLocationUpdates()
+        subscribeToGroupUpdates(groupId)
+        requestMyLocationUpdates()
         enableMyLocationOnMap()
     }
 
@@ -137,9 +193,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             builder.include(marker.position)
         }
         if (mMarkers.isNotEmpty())
-            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 300))
-
-
+            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 8))
     }
 
     private fun setMarkerIcon(marker: Marker, iconUrl: String?) {
@@ -185,17 +239,43 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 startActivity(Intent(this, CreateGroupActivity::class.java))
                 return true
             }
+            R.id.action_refresh -> {
+                requestPositionUpdates()
+                return true
+            }
             R.id.action_join_group_x -> {
+                joinGroup(groupId)
+                return true
+            }
+            R.id.action_leave_group -> {
+                leaveGroupX(groupId)
+                return true
+            }
+            R.id.action_logout -> {
+                auth.signOut()
+                return true
+            }
+            R.id.action_login -> {
                 val currentUser = FirebaseAuth.getInstance().currentUser
                 if (currentUser == null) {
                     startLoginActivity()
                 } else {
-                    joinGroup(currentUser)
+                    Toast.makeText(this, "You are already logged in", Toast.LENGTH_SHORT).show()
                 }
                 return true
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    private fun leaveGroupX(groupId: String) {
+        val currentUser = auth.currentUser ?: return
+        val ref = db.collection(USERS).document(currentUser.uid)
+            .collection(GROUPS).document(groupId)
+//        ref.delete()
+        val data = HashMap<String, Any?>()
+        data[JOINED]= false
+        ref.set(data)
     }
 
     private fun startLoginActivity() {
@@ -212,6 +292,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         )
     }
 
+    // sign in result
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -219,62 +300,68 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             val response = IdpResponse.fromResultIntent(data)
 
             if (resultCode == Activity.RESULT_OK) {
-                // Successfully signed in
-                val user = FirebaseAuth.getInstance().currentUser
-                joinGroup(user)
-                // ...
+//                val currentUser = auth.currentUser
+//                joinGroup(groupId)
+//                FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
+//                    val token = it.token
+//                    Util.sendRegistrationToServer(currentUser, token)
+//                }
             } else {
                 // Sign in failed. If response is null the user canceled the
                 // sign-in flow using the back button. Otherwise check
                 // response.getError().getErrorCode() and handle the error.
                 // ...
+                if (response == null) {
+                    // User pressed the back button.
+                    return
+                }
+                if (response.error?.errorCode == ErrorCodes.NO_NETWORK) {
+                    Toast.makeText(this, getString(R.string.connection_error), Toast.LENGTH_SHORT).show();
+                    return
+                }
+
+                if (response.error?.errorCode == ErrorCodes.UNKNOWN_ERROR) {
+                    Toast.makeText(this, getString(R.string.error_default), Toast.LENGTH_SHORT).show();
+                    return
+                }
             }
         }
     }
 
-    private fun joinGroup(currentUser: FirebaseUser?) {
-        if (currentUser == null) return
+    private fun joinGroup(groupId: String) {
+        val currentUser = auth.currentUser ?: return
 
-        val user = HashMap<String, Any?>()
-        user["name"] = currentUser.displayName
-        user["uid"] = currentUser.uid
-        user["photoUrl"] = currentUser.photoUrl?.toString()
-        user["email"] = currentUser.email
+        val ref = db.collection(USERS).document(currentUser.uid)
+            .collection(GROUPS).document(groupId)
+//        val data = Util.getUserData_(currentUser)
+        val data = HashMap<String, Any?>()
+        data[JOINED]= true
 
-        val db = FirebaseFirestore.getInstance()
-        val groupRef = db.collection("groups").document(groupId)
-        val memberRef = groupRef.collection("members").document(currentUser.uid)
-
-        val batch = db.batch()
-        batch.set(memberRef, user)
-        batch.commit().addOnCompleteListener { task ->
+        ref.set(data).addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                Log.d(TAG, "DocumentSnapshot written with ID: ${groupRef.id}")
                 Toast.makeText(this, "You joined the group", Toast.LENGTH_SHORT).show()
-                subscribeToGroupUpdates()
-                requestLocationUpdates()
+                subscribeToGroupUpdates(groupId)
+//                requestMyLocationUpdates()
             } else {
-                Log.w(TAG, "Error adding document", task.exception)
                 val msg = getString(R.string.toast_group_creation_error)
                 Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun subscribeToGroupUpdates() {
+    private fun subscribeToGroupUpdates(groupId: String) {
         if (!::mMap.isInitialized) return
         mMap.clear()
-
-//            getPreferences(Context.MODE_PRIVATE)
         setActivityTitle(groupId)
         // add other people on the map
-        db.collection("groups").document(groupId).collection("members")
+        db.collection(GROUPS).document(groupId).collection(DEVICES)
             .addSnapshotListener(EventListener<QuerySnapshot> { snapshots, e ->
                 if (e != null) {
                     Log.w(TAG, "listen:error", e)
                     return@EventListener
                 }
-                for (dc in snapshots!!.documentChanges) {
+                if (snapshots == null) return@EventListener
+                for (dc in snapshots.documentChanges) {
                     when (dc.type) {
                         DocumentChange.Type.ADDED -> setMarker(dc.document)
                         DocumentChange.Type.MODIFIED -> setMarker(dc.document)
@@ -282,28 +369,24 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     }
                 }
             })
-
-
     }
 
-    private fun setActivityTitle(groupId: String?) {
-        groupId?.let { id ->
-            db.collection("groups").document(id).get()
-                .addOnSuccessListener { documentSnapshot ->
-                    documentSnapshot?.data?.let { groupData ->
-                        val groupName = groupData["groupName"] as String?
-                        groupName?.let { title = groupName }
-                    }
+    private fun setActivityTitle(groupId: String) {
+        db.collection(GROUPS).document(groupId).get()
+            .addOnSuccessListener { documentSnapshot ->
+                documentSnapshot?.data?.let { groupData ->
+                    val groupName = groupData["groupName"] as String?
+                    groupName?.let { title = groupName }
                 }
-                .addOnFailureListener { exception ->
-                    Log.d(TAG, "get failed with ", exception)
-                }
-        }
+            }
+            .addOnFailureListener { exception ->
+                Log.d(TAG, "get failed with ", exception)
+            }
     }
 
-    private fun requestLocationUpdates() {
+    private fun requestMyLocationUpdates() {
         val request = LocationRequest()
-        request.numUpdates = 2
+        request.numUpdates = 5
         request.interval = 10000
         request.fastestInterval = 5000
         request.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
@@ -318,20 +401,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             // received, store the location in Firebase
             client.requestLocationUpdates(request, object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult?) {
-//                    val ref = FirebaseDatabase.getInstance().getReference(path)
-                    val location = locationResult!!.lastLocation
-                    FirebaseAuth.getInstance().currentUser?.let { user ->
-                        location.provider = user.photoUrl.toString()
-                        if (location != null) {
-                            Log.d(TAG, "location update $location")
-//                        ref.setValue(location)
-                            db.collection("groups")
-                                .document(groupId).collection("members").document(user.uid)
-                                .update("location", location)
-                        }
-                    }
-
-
                 }
             }, null)
         }
@@ -349,8 +418,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     companion object {
         private val TAG = MapsActivity::class.java.simpleName
-        private val PERMISSIONS_REQUEST = 1
-        private val RC_SIGN_IN = 9001
+        private const val PERMISSIONS_REQUEST = 1
+        private const val RC_SIGN_IN = 9001
+        const val DEVICES = "devices"
+        const val GROUPS = "groups"
+        const val FCM_TOKENS = "fcmTokens"
+        const val JOINED = "joined"
+        const val USERS = "users"
+        const val defaultGroupId: String = "defaultGroupId"
+        const val UPDATE_REQUEST = "updateRequest";
     }
 
 
