@@ -9,8 +9,8 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.craiovadata.groupmap.MapsActivity.Companion.GROUPS
-import com.craiovadata.groupmap.MapsActivity.Companion.USERS
+import com.craiovadata.groupmap.MapActivity.Companion.GROUPS
+import com.craiovadata.groupmap.MapActivity.Companion.USERS
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.ErrorCodes
 import com.firebase.ui.auth.IdpResponse
@@ -117,13 +117,13 @@ class CreateGroupActivity : AppCompatActivity() {
         groupData["groupName"] = groupName
         groupData["founder"] = userData
 
-        val refGroup = db.collection(GROUPS).document(MapsActivity.defaultGroupId)
+        val refGroup = db.collection(GROUPS).document(MapActivity.defaultGroupId)
         val groupId = refGroup.id
 
         val refUserGroup = db.collection(USERS).document(currentUser.uid)
             .collection(GROUPS).document(groupId)
         val dataJoined = HashMap<String, Any?>()
-        dataJoined[MapsActivity.JOINED]= true
+        dataJoined[MapActivity.JOINED]= true
 
         val batch = db.batch()
         batch.set(refGroup, groupData)

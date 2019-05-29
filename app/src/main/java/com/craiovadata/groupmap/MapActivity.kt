@@ -38,7 +38,7 @@ import com.google.firebase.firestore.*
 import com.google.firebase.iid.FirebaseInstanceId
 
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     private lateinit var auth: FirebaseAuth
@@ -64,6 +64,24 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 // todo NOT_AUTH but needs write permission
                 deleteMessagingDeviceToken()
             }
+        }
+
+        handleIntent()
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent()
+    }
+
+    private fun handleIntent() {
+        val appLinkIntent = intent
+        val appLinkAction = appLinkIntent.action
+        val appLinkData = appLinkIntent.data
+        if (appLinkData != null) {
+            val groupId = appLinkData.lastPathSegment
+    //           showGroup
         }
     }
 
@@ -417,7 +435,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     companion object {
-        private val TAG = MapsActivity::class.java.simpleName
+        private val TAG = MapActivity::class.java.simpleName
         private const val PERMISSIONS_REQUEST = 1
         private const val RC_SIGN_IN = 9001
         const val DEVICES = "devices"

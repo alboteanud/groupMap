@@ -52,7 +52,7 @@ class TrackerService : Service() {
                 // get registration token
                 FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { result ->
                     val token = result.token
-//                    val ref = db.collection(MapsActivity.FCM_TOKENS).document(token)
+//                    val ref = db.collection(MapActivity.FCM_TOKENS).document(token)
 //                    val userData = HashMap<String, Any?>()
 //                    userData["uid"] = currentUser.uid
 //                    ref.set(userData)

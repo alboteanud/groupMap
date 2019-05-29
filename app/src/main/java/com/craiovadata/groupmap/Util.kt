@@ -4,7 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.util.Log
 import android.view.inputmethod.InputMethodManager
-import com.craiovadata.groupmap.MapsActivity.Companion.FCM_TOKENS
+import com.craiovadata.groupmap.MapActivity.Companion.FCM_TOKENS
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.firebase.auth.FirebaseUser
