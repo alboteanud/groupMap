@@ -26,7 +26,7 @@
     <item
         android:id="@+id/action_privacy_policy"
         android:title="Privacy policy" />
- <item
+    <item
         android:id="@+id/action_join_group_x"
         android:title="Join group X" />
 
@@ -34,15 +34,20 @@
         android:id="@+id/action_leave_group"
         android:title="Leave group X" />
 
-<item
+    <item
         android:id="@+id/action_logout"
         android:title="Logout" />
 
-<item
+    <item
         android:id="@+id/action_login"
         android:title="Login" />
+    <item
+        android:id="@+id/action_group_info"
+        android:title="Group info" />
 
-
+    <item
+        android:id="@+id/menu_item_share"
+        android:title="Share group" />
 
 
 </menu>

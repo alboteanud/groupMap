@@ -1,5 +1,7 @@
 package com.craiovadata.groupmap
 
+import com.craiovadata.groupmap.utils.JOINED
+import com.google.firebase.firestore.FirebaseFirestore
 import org.junit.Test
 
 import org.junit.Assert.*
@@ -13,5 +15,11 @@ class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
         assertEquals(4, 2 + 2)
+    }
+
+    @Test
+    fun populateDefaultGroup(){
+       val db = FirebaseFirestore.getInstance()
+        db.collection("test").document().set(hashMapOf(JOINED to true))
     }
 }

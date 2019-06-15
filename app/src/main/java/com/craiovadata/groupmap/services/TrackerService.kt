@@ -1,4 +1,4 @@
-package com.craiovadata.groupmap
+package com.craiovadata.groupmap.services
 
 //import com.google.firebase.database.FirebaseDatabase
 import android.Manifest
@@ -16,6 +16,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import com.craiovadata.groupmap.R
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -52,7 +53,7 @@ class TrackerService : Service() {
                 // get registration token
                 FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { result ->
                     val token = result.token
-//                    val ref = db.collection(MapActivity.FCM_TOKENS).document(token)
+//                    val ref = db.collection(MainActivity.FCM_TOKENS).document(token)
 //                    val userData = HashMap<String, Any?>()
 //                    userData["uid"] = currentUser.uid
 //                    ref.set(userData)

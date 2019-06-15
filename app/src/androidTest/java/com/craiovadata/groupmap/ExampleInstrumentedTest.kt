@@ -1,7 +1,10 @@
 package com.craiovadata.groupmap
 
+import android.util.Log
 import androidx.test.InstrumentationRegistry
 import androidx.test.runner.AndroidJUnit4
+import com.craiovadata.groupmap.utils.JOINED
+import com.google.firebase.firestore.FirebaseFirestore
 
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -21,4 +24,17 @@ class ExampleInstrumentedTest {
         val appContext = InstrumentationRegistry.getTargetContext()
         assertEquals("com.craiovadata.transportdisplay", appContext.packageName)
     }
+
+
+    @Test
+    fun populateDefaultGroup(){
+        val db = FirebaseFirestore.getInstance()
+        Log.d("tag", "start test")
+        db.collection("test").document().set(hashMapOf(JOINED to true)).addOnCompleteListener {
+            Log.d("tag", "finish")
+        }
+    }
+
+
+
 }
