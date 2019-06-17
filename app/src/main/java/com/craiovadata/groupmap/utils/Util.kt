@@ -173,18 +173,15 @@ object Util {
         )
     }
     
-    fun populateDefaultGroup() {
-        if(!BuildConfig.DEBUG) return
-        Log.d(TAG, "start populate default group")
-        val db = FirebaseFirestore.getInstance()
-        val batch = db.batch()
-        batch.set(db.collection(GROUPS).document(DEFAULT_GROUP), hashMapOf(GROUP_NAME to "The New Yorkers"))
-        val persons = getDummyUsers()
-        persons.forEachIndexed { index, person ->
-            val ref = db.collection(GROUPS).document(DEFAULT_GROUP).collection(DEVICES).document(index.toString())
-            batch.set(ref, person)
+
+
+    fun deleteMessagingDeviceToken() {
+        FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { result ->
+            val token = result.token
+            val db = FirebaseFirestore.getInstance()
+            val ref = db.collection(FCM_TOKENS).document(token)
+            ref.delete()
         }
-        batch.commit()
     }
 
 }

@@ -21,7 +21,6 @@ import com.craiovadata.groupmap.R
 import com.craiovadata.groupmap.utils.*
 import com.craiovadata.groupmap.utils.GroupUtils.joinGroup
 import com.craiovadata.groupmap.utils.GroupUtils.leaveGroup
-import com.craiovadata.groupmap.utils.GroupUtils.startActionShare
 import com.craiovadata.groupmap.utils.MapUtils.checkLocationPermission
 import com.craiovadata.groupmap.utils.MapUtils.enableMyLocationOnMap
 import com.craiovadata.groupmap.utils.MapUtils.requestMyLocationUpdates
@@ -39,7 +38,6 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.*
-import com.google.firebase.iid.FirebaseInstanceId
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 
@@ -50,6 +48,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var db: FirebaseFirestore
     private val mMarkers = hashMapOf<String, Marker?>()
     private lateinit var groupId: String
+        var groupData:Map<String, Any>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,7 +59,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             .getString(KEY_GROUP_ID, NO_GROUP) ?: NO_GROUP
         setAuthStateListener()
         initMap()
-        Util.populateDefaultGroup()
+//        populateDefaultGroup()
     }
 
     private fun initMap() {
@@ -74,45 +73,51 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         if (groupId == NO_GROUP) {  // first start
             groupId = DEFAULT_GROUP
             checkInstallReffererForGroupKey { groupKey ->
-                getGroupDataFromShareKey(groupKey)
+                getGroupData(groupKey)
             }
         } else {
             val groupKey = getGroupKeyFromIntent()
-            getGroupDataFromShareKey(groupKey)
+            getGroupData(groupKey)
         }
     }
 
-    var groupData:Map<String, Any>? = null
 
-    private fun getGroupDataFromShareKey(groupKey: String?) {
-        if (groupKey != null)
-            getGroupId(groupKey) { groupData ->
-                if (groupData != null) {
-                    this.groupData = groupData
-                    handleGroupData()
-                } else {
-                    getGroupData()
-                }
-            }
-        else {
-            getGroupData()
-        }
-    }
 
     private fun handleGroupData() {
-        updateHeader(groupData)
-        subscribeToGroupUpdates()
+      groupData?.apply {
+          title = this[GROUP_NAME] as? String
+          subscribeToGroupUpdates()
+      }
+
     }
 
-    private fun getGroupData() {
-        db.collection(GROUPS).document(groupId).get()
-            .addOnCompleteListener { task ->
-//                var groupData: Map<String, Any>? = null
-                if (task.isSuccessful) {
-                    task.result?.apply { groupData = data }
+    private fun getGroupData(groupShareKey: String?) {
+        if (groupShareKey!=null){
+
+            db.collection(GROUPS).whereEqualTo(GROUP_SHARE_KEY, groupShareKey)
+                .get().addOnCompleteListener {task ->
+                    if (task.isSuccessful){
+                        task.result?.documents?.apply {
+                            if(this.isNotEmpty()){
+                                groupData = this[0].data
+                                groupId = this[0].id
+                            }
+                        }
+                    }
+                    handleGroupData()
                 }
-                handleGroupData()
-            }
+
+        } else{
+
+            db.collection(GROUPS).document(groupId).get()
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        task.result?.apply { groupData = data }
+                    }
+                    handleGroupData()
+                }
+
+        }
 
     }
 
@@ -140,7 +145,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 callback.invoke(null)
             }
         })
-
     }
 
     private fun getGroupKeyFromIntent(): String? {
@@ -159,37 +163,20 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         return null
     }
 
-    private fun getGroupId(groupKey: String, callback: (Map<String, Any>?) -> Unit) {
 
-        db.collection(GROUPS).whereEqualTo(GROUP_SHARE_KEY, groupKey)
-            .get().addOnSuccessListener { snap ->
-                if (snap == null || snap.documents.isEmpty()) {
-                    callback.invoke(null)
-                    return@addOnSuccessListener
-                }
-                val groupDoc = snap.documents[0]
-                groupId = groupDoc.id
-                callback.invoke(groupDoc.data)
-
-            }
-            .addOnFailureListener {
-                callback.invoke(null)
-            }
-    }
-
-
-    private fun updateHeader(groupData: Map<String, Any>?) {
-        groupData?.get(GROUP_NAME)?.let { name -> title = name as String }
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        val  groupShareKey = groupData?.get(GROUP_SHARE_KEY)
+        menu?.findItem(R.id.menu_item_share)?.isVisible = groupShareKey != null
+        return super.onPrepareOptionsMenu(menu)
     }
 
     private fun setAuthStateListener() {
         FirebaseAuth.getInstance().addAuthStateListener {
             currentUser = it.currentUser
-            if (it.currentUser != null) {
+            if (currentUser != null) {
                 saveMessagingDeviceToken()
             } else {
-                // todo NOT_AUTH but needs write permission
-                deleteMessagingDeviceToken()
+//                deleteMessagingDeviceToken()        // needs write permission but NOT_AUTH
             }
         }
     }
@@ -199,15 +186,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         setIntent(intent)
         val groupKey = getGroupKeyFromIntent()
         if (groupKey != null)
-            getGroupDataFromShareKey(groupKey)
-    }
-
-    private fun deleteMessagingDeviceToken() {
-        FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { result ->
-            val token = result.token
-            val ref = db.collection(FCM_TOKENS).document(token)
-            ref.delete()
-        }
+            getGroupData(groupKey)
     }
 
     private fun requestPositionUpdates() {
@@ -269,7 +248,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             marker?.let { builder.include(it.position) }
 
         }
-        if (mMarkers.isNotEmpty()){
+        if (mMarkers.isNotEmpty()) {
             val padding = 80
             mMap?.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), padding))
         }
@@ -357,9 +336,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 return true
             }
             R.id.menu_item_share -> {
-                groupData?.get(GROUP_SHARE_KEY)?.let {
-                    startActionShare(this, it)
-                }
+//                groupData?.get(GROUP_SHARE_KEY)?.let {
+//                    startActionShare(this, it)
+//                }
 
                 return true
             }
@@ -404,7 +383,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 // a group was created
                 data?.getStringExtra(KEY_GROUP_ID)?.let { resultId ->
                     groupId = resultId
-                    getGroupData()
+                    getGroupData(null)
                 }
             }
         }
@@ -437,7 +416,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 }
         } ?: startLoginActivity(this)
     }
-
 
     private fun buildAlertJoinGroup(callback: () -> Unit) {
         Snackbar.make(content_main, "Join group?", Snackbar.LENGTH_INDEFINITE)

@@ -2,7 +2,9 @@ package com.craiovadata.groupmap.utils
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.widget.Toast
+import com.craiovadata.groupmap.BuildConfig
 import com.craiovadata.groupmap.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -47,6 +49,20 @@ object GroupUtils {
             }
             context.startActivity(Intent.createChooser(sendIntent, "send_to"))
 
+    }
+
+    fun populateDefaultGroup() {
+        if(!BuildConfig.DEBUG) return
+        Log.d(Util.TAG, "start populate default group")
+        val db = FirebaseFirestore.getInstance()
+        val batch = db.batch()
+        batch.set(db.collection(GROUPS).document(DEFAULT_GROUP), hashMapOf(GROUP_NAME to "The New Yorkers"))
+        val persons = Util.getDummyUsers()
+        persons.forEachIndexed { index, person ->
+            val ref = db.collection(GROUPS).document(DEFAULT_GROUP).collection(DEVICES).document(index.toString())
+            batch.set(ref, person)
+        }
+        batch.commit()
     }
 
 
