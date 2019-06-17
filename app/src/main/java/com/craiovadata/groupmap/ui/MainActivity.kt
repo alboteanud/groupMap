@@ -21,6 +21,7 @@ import com.craiovadata.groupmap.R
 import com.craiovadata.groupmap.utils.*
 import com.craiovadata.groupmap.utils.GroupUtils.joinGroup
 import com.craiovadata.groupmap.utils.GroupUtils.leaveGroup
+import com.craiovadata.groupmap.utils.GroupUtils.startActionShare
 import com.craiovadata.groupmap.utils.MapUtils.checkLocationPermission
 import com.craiovadata.groupmap.utils.MapUtils.enableMyLocationOnMap
 import com.craiovadata.groupmap.utils.MapUtils.requestMyLocationUpdates
@@ -75,13 +76,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             checkInstallReffererForGroupKey { groupKey ->
                 getGroupData(groupKey)
             }
+            getSharedPreferences("_", Context.MODE_PRIVATE).edit()
+                .putString(KEY_GROUP_ID, groupId).apply()
         } else {
             val groupKey = getGroupKeyFromIntent()
             getGroupData(groupKey)
         }
     }
-
-
 
     private fun handleGroupData() {
       groupData?.apply {
@@ -101,6 +102,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                             if(this.isNotEmpty()){
                                 groupData = this[0].data
                                 groupId = this[0].id
+                                getSharedPreferences("_", Context.MODE_PRIVATE).edit()
+                                    .putString(KEY_GROUP_ID, groupId).apply()
                             }
                         }
                     }
@@ -116,7 +119,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     }
                     handleGroupData()
                 }
-
         }
 
     }
@@ -163,7 +165,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         return null
     }
 
-
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
         val  groupShareKey = groupData?.get(GROUP_SHARE_KEY)
         menu?.findItem(R.id.menu_item_share)?.isVisible = groupShareKey != null
@@ -176,6 +177,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             if (currentUser != null) {
                 saveMessagingDeviceToken()
             } else {
+                // todo need this?
 //                deleteMessagingDeviceToken()        // needs write permission but NOT_AUTH
             }
         }
@@ -193,9 +195,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         currentUser?.apply {
             // Update one field, creating the document if it does not already exist.
             val requestData = HashMap<String, Any?>()
-            requestData["uid"] = uid
-            requestData["name"] = displayName ?: email
-            requestData["time"] = FieldValue.serverTimestamp()
+            requestData[UID] = uid
+            requestData[NAME] = displayName ?: email
+            requestData[TIME] = FieldValue.serverTimestamp()
             val request = HashMap<String, Any>()
             request[UPDATE_REQUEST] = requestData
 
@@ -336,9 +338,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 return true
             }
             R.id.menu_item_share -> {
-//                groupData?.get(GROUP_SHARE_KEY)?.let {
-//                    startActionShare(this, it)
-//                }
+                groupData?.get(GROUP_SHARE_KEY)?.let {
+                    startActionShare(this, it)
+                }
 
                 return true
             }
@@ -384,15 +386,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 data?.getStringExtra(KEY_GROUP_ID)?.let { resultId ->
                     groupId = resultId
                     getGroupData(null)
+                    getSharedPreferences("_", Context.MODE_PRIVATE).edit()
+                        .putString(KEY_GROUP_ID, groupId).apply()
                 }
             }
         }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        getSharedPreferences("_", Context.MODE_PRIVATE).edit()
-            .putString(KEY_GROUP_ID, groupId).apply()
     }
 
     private fun subscribeToGroupUpdates() {

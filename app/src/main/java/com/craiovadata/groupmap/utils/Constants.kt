@@ -28,6 +28,7 @@ const val CREATED_AT = "createdAt"
 const val LOCATION = "location"
 const val LATITUDE = "latitude"
 const val LONGITUDE = "longitude"
+const val TIME = "time"
 
 
 
