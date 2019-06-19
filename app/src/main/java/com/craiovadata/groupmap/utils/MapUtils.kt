@@ -4,15 +4,24 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
+import android.location.Location
 import android.location.LocationManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemService
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
+import com.craiovadata.groupmap.R
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.*
+import com.google.firebase.firestore.QueryDocumentSnapshot
 
 object MapUtils {
 
@@ -49,11 +58,11 @@ object MapUtils {
         }
     }
 
-    fun requestMyLocationUpdates(context: Context) {
+    fun requestMyGpsLocation(context: Context, callback: (location: Location) -> Unit) {
         val request = LocationRequest()
-        request.numUpdates = 5
-        request.interval = 10000
-        request.fastestInterval = 5000
+//        request.interval = 10000
+//        request.fastestInterval = 5000
+        request.numUpdates = 1
         request.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         val client = LocationServices.getFusedLocationProviderClient(context)
 //        val path = getString(R.string.firebase_path) + "/" + getString(R.string.transport_id)
@@ -66,8 +75,94 @@ object MapUtils {
             // received, store the location in Firebase
             client.requestLocationUpdates(request, object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult?) {
+                    val location = locationResult?.lastLocation
+                    if (location != null)
+                        callback.invoke(location)
                 }
             }, null)
         }
     }
+
+    fun zoomOnMe(context: Context, map: GoogleMap?) {
+        requestMyGpsLocation(context) { location ->
+            map?.animateCamera(
+                CameraUpdateFactory.newLatLngZoom(
+                    LatLng(
+                        location.latitude,
+                        location.longitude
+                    ), 13F
+                )
+            )
+        }
+    }
+
+    fun setMarker(
+        context: Context,
+        document: QueryDocumentSnapshot,
+        mask: Boolean,
+        mMarkers: HashMap<String, Marker?>,
+        mMap: GoogleMap?
+    ) {
+        // When a location update is received, put or update
+        // its value in mMarkers, which contains all the markers
+        // for locations received, so that we can build the
+        // boundaries required to show them all on the map at once
+        val key = document.id
+        var locationData = document.data[LOCATION] ?: return
+        locationData = locationData as HashMap<*, *>
+        val lat = locationData[LATITUDE] as Double
+        val lng = locationData[LONGITUDE] as Double
+        val location = LatLng(lat, lng)
+        if (!mMarkers.containsKey(key)) {
+            var userName = document.data[NAME] as String
+            var iconUrl = document.data[PHOTO_URL]?.toString()
+            if (mask) {
+                userName = "?"
+                iconUrl = null
+            }
+            val marker = mMap?.addMarker(MarkerOptions().title(userName).position(location))
+
+            setMarkerIcon(context, marker, iconUrl)
+            mMarkers[key] = marker
+        } else {
+            mMarkers[key]?.position = location
+        }
+        val builder = LatLngBounds.Builder()
+        for (marker in mMarkers.values) {
+            marker?.apply { builder.include(position) }
+        }
+        if (mMarkers.isNotEmpty()) {
+            val padding = 80
+            mMap?.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), padding))
+        }
+
+    }
+
+    fun setMarkerIcon(context: Context?, marker: Marker?, iconUrl: String?) {
+        if (iconUrl == null) return
+        if (marker == null) return
+        if (context == null) return
+
+        Glide.with(context)
+            .asBitmap()
+            .load(iconUrl)
+            .into(object : CustomTarget<Bitmap>() {
+
+                override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
+                    val icon = BitmapDescriptorFactory.fromBitmap(resource)
+                    marker.setIcon(icon)
+                }
+
+                override fun onLoadFailed(errorDrawable: Drawable?) {
+                    super.onLoadFailed(errorDrawable)
+                    val icon = BitmapDescriptorFactory.fromResource(R.drawable.ic_person_pin)
+                    marker.setIcon(icon)
+                }
+
+                override fun onLoadCleared(placeholder: Drawable?) {}
+
+            })
+    }
+
+
 }

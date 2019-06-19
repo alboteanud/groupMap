@@ -1,10 +1,8 @@
 package com.craiovadata.groupmap.ui
 
-import android.content.Context
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -14,25 +12,23 @@ import androidx.appcompat.app.AppCompatActivity
 import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
 import com.android.installreferrer.api.ReferrerDetails
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.transition.Transition
 import com.craiovadata.groupmap.R
 import com.craiovadata.groupmap.utils.*
+import com.craiovadata.groupmap.utils.GroupUtils.checkInstallReffererForGroupKey
+import com.craiovadata.groupmap.utils.GroupUtils.getGroupKeyFromIntent
 import com.craiovadata.groupmap.utils.GroupUtils.joinGroup
 import com.craiovadata.groupmap.utils.GroupUtils.leaveGroup
 import com.craiovadata.groupmap.utils.GroupUtils.startActionShare
 import com.craiovadata.groupmap.utils.MapUtils.checkLocationPermission
 import com.craiovadata.groupmap.utils.MapUtils.enableMyLocationOnMap
-import com.craiovadata.groupmap.utils.MapUtils.requestMyLocationUpdates
+import com.craiovadata.groupmap.utils.MapUtils.setMarker
+import com.craiovadata.groupmap.utils.MapUtils.zoomOnMe
 import com.craiovadata.groupmap.utils.Util.getDownloadUri
 import com.craiovadata.groupmap.utils.Util.saveMessagingDeviceToken
 import com.craiovadata.groupmap.utils.Util.startLoginActivity
 import com.firebase.ui.auth.ErrorCodes
 import com.firebase.ui.auth.IdpResponse
-import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
@@ -42,22 +38,20 @@ import com.google.firebase.firestore.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 
-class MainActivity : AppCompatActivity(), OnMapReadyCallback {
+class MainActivity : AppCompatActivity() {
 
     private var mMap: GoogleMap? = null
     private var currentUser: FirebaseUser? = null
     private lateinit var db: FirebaseFirestore
     private val mMarkers = hashMapOf<String, Marker?>()
     private lateinit var groupId: String
-        var groupData:Map<String, Any>? = null
+    private var groupData: Map<String, Any>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
         db = FirebaseFirestore.getInstance()
-        groupId = getSharedPreferences("_", MODE_PRIVATE)
-            .getString(KEY_GROUP_ID, NO_GROUP) ?: NO_GROUP
         setAuthStateListener()
         initMap()
 //        populateDefaultGroup()
@@ -66,51 +60,58 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun initMap() {
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync(this)
+        mapFragment.getMapAsync {
+            mMap = it
+            mMap?.setMaxZoomPreference(16f)
+            initGroupData()
+//            requestGpsLocationUpdates(this)
+            enableMyLocationOnMap(this, mMap)
+
+        }
         checkLocationPermission(this, mMap)
     }
 
-    private fun initGroupId() {
+    private fun initGroupData() {
+        val prefs = getSharedPreferences("_", MODE_PRIVATE)
+        groupId = prefs.getString(GROUP_ID, NO_GROUP) ?: NO_GROUP
         if (groupId == NO_GROUP) {  // first start
             groupId = DEFAULT_GROUP
-            checkInstallReffererForGroupKey { groupKey ->
+            prefs.edit().putString(GROUP_ID, groupId).apply()
+            checkInstallReffererForGroupKey(this) { groupKey ->
                 getGroupData(groupKey)
             }
-            getSharedPreferences("_", Context.MODE_PRIVATE).edit()
-                .putString(KEY_GROUP_ID, groupId).apply()
         } else {
-            val groupKey = getGroupKeyFromIntent()
+            val groupKey = getGroupKeyFromIntent(this)
             getGroupData(groupKey)
         }
     }
 
     private fun handleGroupData() {
-      groupData?.apply {
-          title = this[GROUP_NAME] as? String
-          subscribeToGroupUpdates()
-      }
-
+        groupData?.apply {
+            title = this[GROUP_NAME] as? String
+            subscribeToGroupUpdates()
+        }
     }
 
     private fun getGroupData(groupShareKey: String?) {
-        if (groupShareKey!=null){
+        if (groupShareKey != null) {
 
             db.collection(GROUPS).whereEqualTo(GROUP_SHARE_KEY, groupShareKey)
-                .get().addOnCompleteListener {task ->
-                    if (task.isSuccessful){
+                .get().addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
                         task.result?.documents?.apply {
-                            if(this.isNotEmpty()){
+                            if (this.isNotEmpty()) {
                                 groupData = this[0].data
                                 groupId = this[0].id
-                                getSharedPreferences("_", Context.MODE_PRIVATE).edit()
-                                    .putString(KEY_GROUP_ID, groupId).apply()
+                                getSharedPreferences("_", MODE_PRIVATE).edit()
+                                    .putString(GROUP_ID, groupId).apply()
                             }
                         }
                     }
                     handleGroupData()
                 }
 
-        } else{
+        } else {
 
             db.collection(GROUPS).document(groupId).get()
                 .addOnCompleteListener { task ->
@@ -120,53 +121,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     handleGroupData()
                 }
         }
-
-    }
-
-    private fun checkInstallReffererForGroupKey(callback: (groupKey: String?) -> Unit) {
-        // check if url contains group link code
-        val referrerClient = InstallReferrerClient.newBuilder(this).build()
-        referrerClient.startConnection(object : InstallReferrerStateListener {
-
-            override fun onInstallReferrerSetupFinished(responseCode: Int) {
-                if (responseCode == InstallReferrerClient.InstallReferrerResponse.OK) {
-                    // Connection established
-                    val response: ReferrerDetails = referrerClient.installReferrer
-                    val endUrl = response.installReferrer
-                    val downloadUri = getDownloadUri(this@MainActivity, endUrl)
-                    val groupKey = downloadUri.getQueryParameter("utm_content")
-                    callback.invoke(groupKey)
-                } else {
-                    callback.invoke(null)
-                }
-            }
-
-            override fun onInstallReferrerServiceDisconnected() {
-                // Try to restart the connection on the next request to
-                // Google Play by calling the startConnection() method.
-                callback.invoke(null)
-            }
-        })
-    }
-
-    private fun getGroupKeyFromIntent(): String? {
-        val appLinkIntent = intent
-//        val appLinkAction = appLinkIntent.action
-        val appLinkData = appLinkIntent.data
-
-        if (appLinkData != null) {
-            val segments = appLinkData.pathSegments
-            if (segments.size >= 2) {
-                if (segments[0] == "group") {
-                    return segments[1]
-                }
-            }
-        }
-        return null
     }
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        val  groupShareKey = groupData?.get(GROUP_SHARE_KEY)
+        val groupShareKey = groupData?.get(GROUP_SHARE_KEY)
         menu?.findItem(R.id.menu_item_share)?.isVisible = groupShareKey != null
         return super.onPrepareOptionsMenu(menu)
     }
@@ -186,31 +144,22 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         setIntent(intent)
-        val groupKey = getGroupKeyFromIntent()
+        val groupKey = getGroupKeyFromIntent(this)
         if (groupKey != null)
             getGroupData(groupKey)
     }
 
-    private fun requestPositionUpdates() {
+    private fun requestPositionUpdatesFromOthers() {
         currentUser?.apply {
             // Update one field, creating the document if it does not already exist.
-            val requestData = HashMap<String, Any?>()
-            requestData[UID] = uid
-            requestData[NAME] = displayName ?: email
-            requestData[TIME] = FieldValue.serverTimestamp()
-            val request = HashMap<String, Any>()
-            request[UPDATE_REQUEST] = requestData
+            val data = HashMap<String, Any?>()
+            data[UID] = uid
+            if (!displayName.isNullOrBlank()) data[NAME] = displayName
+            else data[NAME] = email
+            data[TIMESTAMP] = FieldValue.serverTimestamp()
 
-            db.collection(GROUPS).document(groupId).set(request, SetOptions.merge())
+            db.document("$GROUPS/$groupId/$UPDATE_REQUEST/0").set(data)
         }
-    }
-
-    override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
-        mMap?.setMaxZoomPreference(16f)
-        initGroupId()
-        requestMyLocationUpdates(this)
-        enableMyLocationOnMap(this, mMap)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -225,61 +174,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private fun setMarker(document: QueryDocumentSnapshot) {
-        // When a location update is received, put or update
-        // its value in mMarkers, which contains all the markers
-        // for locations received, so that we can build the
-        // boundaries required to show them all on the map at once
-        val key = document.id
-        var locationData = document.data[LOCATION] ?: return
-        locationData = locationData as HashMap<*, *>
-        val lat = locationData[LATITUDE] as Double
-        val lng = locationData[LONGITUDE] as Double
-        val location = LatLng(lat, lng)
-        if (!mMarkers.containsKey(key)) {
-            val userName = document.data[NAME] as String
-            val marker = mMap?.addMarker(MarkerOptions().title(userName).position(location))
-            val iconUrl = document.data[PHOTO_URL]?.toString()
-            setMarkerIcon(marker, iconUrl)
-            mMarkers[key] = marker
-        } else {
-            mMarkers[key]?.position = location
-        }
-        val builder = LatLngBounds.Builder()
-        for (marker in mMarkers.values) {
-            marker?.let { builder.include(it.position) }
-
-        }
-        if (mMarkers.isNotEmpty()) {
-            val padding = 80
-            mMap?.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), padding))
-        }
-
-    }
-
-    private fun setMarkerIcon(marker: Marker?, iconUrl: String?) {
-        if (iconUrl == null) return
-        if (marker == null) return
-        Glide.with(applicationContext)
-            .asBitmap()
-            .load(iconUrl)
-            .into(object : CustomTarget<Bitmap>() {
-
-                override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
-                    val icon = BitmapDescriptorFactory.fromBitmap(resource)
-                    marker.setIcon(icon)
-                }
-
-                override fun onLoadFailed(errorDrawable: Drawable?) {
-                    super.onLoadFailed(errorDrawable)
-                    val icon = BitmapDescriptorFactory.fromResource(R.drawable.ic_person_pin)
-                    marker.setIcon(icon)
-                }
-
-                override fun onLoadCleared(placeholder: Drawable?) {}
-
-            })
-    }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -305,7 +199,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 return true
             }
             R.id.action_refresh -> {
-                requestPositionUpdates()
+                requestPositionUpdatesFromOthers()
                 return true
             }
 //            R.id.action_join_group_x -> {
@@ -333,7 +227,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             }
             R.id.action_group_info -> {
                 val intent = Intent(this, GroupInfoActivity::class.java)
-                intent.putExtra(KEY_GROUP_ID, groupId)
+                intent.putExtra(GROUP_ID, groupId)
                 startActivity(intent)
                 return true
             }
@@ -382,12 +276,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         } else if (requestCode == CREATE_GROUP_REQUEST) {
             if (resultCode == RESULT_OK) {
-                // a group was created
-                data?.getStringExtra(KEY_GROUP_ID)?.let { resultId ->
+                // a group was just created
+                data?.getStringExtra(GROUP_ID)?.let { resultId ->
                     groupId = resultId
                     getGroupData(null)
-                    getSharedPreferences("_", Context.MODE_PRIVATE).edit()
-                        .putString(KEY_GROUP_ID, groupId).apply()
+                    zoomOnMe(this, mMap)
+                    getSharedPreferences("_", MODE_PRIVATE).edit()
+                        .putString(GROUP_ID, groupId).apply()
+
                 }
             }
         }
@@ -395,7 +291,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun subscribeToGroupUpdates() {
         if (groupId == DEFAULT_GROUP) {
-            setPositionsListener()
+            setPositionsListener(mask = false)
             return
         }
         //  check if user is login and is member. Ask to join
@@ -403,35 +299,48 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             db.collection(USERS).document(uid).collection(GROUPS).document(groupId).get()
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful && task.result?.data?.get(JOINED) == true) {
-                        requestPositionUpdates()
-                        setPositionsListener()
+                        requestPositionUpdatesFromOthers()
+                        setPositionsListener(mask = false)
                     } else {
-                        buildAlertJoinGroup {
-                            requestPositionUpdates()
-                            setPositionsListener()
+                        setPositionsListener(mask = true)
+                        buildAlertJoinGroup { joined ->
+                            if (joined) {
+                                joinGroup(this@MainActivity, groupId) {
+                                    requestPositionUpdatesFromOthers()
+                                    setPositionsListener(mask = false)
+                                    Snackbar.make(content_main, "You joined the group.", Snackbar.LENGTH_LONG)
+                                        .setAction("Privacy policy") {
+                                            val intent = Intent(this@MainActivity, PrivacyActivity::class.java)
+                                            startActivity(intent)
+                                        }.show()
+                                }
+                            } else {
+                                // todo how to join group after dismissing
+                            }
+
                         }
                     }
                 }
         } ?: startLoginActivity(this)
     }
 
-    private fun buildAlertJoinGroup(callback: () -> Unit) {
+    private fun buildAlertJoinGroup(callback: (didJoin: Boolean) -> Unit) {
         Snackbar.make(content_main, "Join group?", Snackbar.LENGTH_INDEFINITE)
             .setAction("Yes") {
-                joinGroup(this@MainActivity, groupId) {
-                    callback.invoke()
-                    Snackbar.make(content_main, "You joined the group.", Snackbar.LENGTH_LONG)
-                        .setAction("Privacy policy") {
-                            startActivity(Intent(this, PrivacyActivity::class.java))
-                        }.show()
-                }
-            }.show()
+                callback.invoke(true)
+            }
+            .setAction("No") {
+                callback.invoke(false)
+            }
+            .show()
     }
 
-    private fun setPositionsListener() {
+    var positionListenerRegistration: ListenerRegistration? = null
+    private fun setPositionsListener(mask: Boolean) {
         mMap?.clear()
-        // add others on map
-        db.collection(GROUPS).document(groupId).collection(DEVICES)
+
+        positionListenerRegistration?.remove()
+        positionListenerRegistration = db.collection(GROUPS).document(groupId).collection(DEVICES)
             .addSnapshotListener(EventListener<QuerySnapshot> { snapshots, e ->
                 if (e != null) {
                     Log.w(TAG, "listen:error", e)
@@ -440,8 +349,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 if (snapshots == null) return@EventListener
                 for (dc in snapshots.documentChanges) {
                     when (dc.type) {
-                        DocumentChange.Type.ADDED -> setMarker(dc.document)
-                        DocumentChange.Type.MODIFIED -> setMarker(dc.document)
+                        DocumentChange.Type.ADDED -> setMarker(this, dc.document, mask, mMarkers, mMap)
+                        DocumentChange.Type.MODIFIED -> setMarker(this, dc.document, mask, mMarkers, mMap)
                         DocumentChange.Type.REMOVED -> Log.d(TAG, "Removed doc: ${dc.document.data}")
                     }
                 }
@@ -454,3 +363,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
 }
 
+//  keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android
+
+//  keytool -list -v -keystore /Users/danalboteanu/AndroidStudioProjects/upload_key_2.jks -alias key0 -storepass 666666 -keypass 666666

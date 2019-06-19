@@ -1,7 +1,7 @@
 package com.craiovadata.groupmap.utils
 
 const val GROUP_NAME = "groupName"
-const val KEY_GROUP_ID = "groupId"
+const val GROUP_ID = "groupId"
 const val GROUPS = "groups"
 const val DEFAULT_GROUP: String = "defaultGroup"
 const val NO_GROUP = "no_group"
@@ -28,7 +28,7 @@ const val CREATED_AT = "createdAt"
 const val LOCATION = "location"
 const val LATITUDE = "latitude"
 const val LONGITUDE = "longitude"
-const val TIME = "time"
+const val TIMESTAMP = "timestamp"
 
 
 

@@ -1,7 +1,5 @@
 package com.craiovadata.groupmap.services
 
-//import com.google.firebase.database.FirebaseDatabase
-import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -10,19 +8,14 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat
 import com.craiovadata.groupmap.R
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.LocationServices
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
+import com.craiovadata.groupmap.utils.*
+import com.craiovadata.groupmap.utils.MapUtils.requestMyGpsLocation
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.iid.FirebaseInstanceId
@@ -31,41 +24,37 @@ import com.google.firebase.iid.FirebaseInstanceId
 class TrackerService : Service() {
 
     private val tag = TrackerService::class.java.simpleName
-    var user: FirebaseUser? = null
 
     override fun onBind(intent: Intent): IBinder? {
         return null
     }
 
-    override fun onCreate() {
-        super.onCreate()
-        buildNotification()
-//        loginToFirebase()
-    }
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
-        intent?.let {
-            if (it.hasExtra("groupId")) {
-                val groupId = it.getStringExtra("groupId")
-                val currentUser = FirebaseAuth.getInstance().currentUser ?: return@let
-
-                // get registration token
-                FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { result ->
-                    val token = result.token
-//                    val ref = db.collection(MainActivity.FCM_TOKENS).document(token)
-//                    val userData = HashMap<String, Any?>()
-//                    userData["uid"] = currentUser.uid
-//                    ref.set(userData)
-
-                    requestLocationUpdates(groupId, token)
+        if (intent != null && intent.hasExtra(GROUP_ID)) {
+            val groupId = intent.getStringExtra(GROUP_ID)
+            buildNotification()
+            // get registration token
+            FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
+                requestMyGpsLocation(this) { location ->
+                    updateDB(location, groupId, it.token)
+                    stopForeground(true)
+                    stopSelf()
                 }
-
-
             }
         }
 
         return super.onStartCommand(intent, flags, startId)
+    }
+
+    private fun updateDB(location: Location, groupId: String, token: String) {
+        val data = hashMapOf(
+            LATITUDE to location.latitude,
+            LONGITUDE to location.longitude
+        )
+        val locationData = hashMapOf(LOCATION to data)
+        val db = FirebaseFirestore.getInstance()
+        db.document("$GROUPS/$groupId/$DEVICES/$token")
+            .set(locationData, SetOptions.merge())
     }
 
     private fun buildNotification() {
@@ -90,7 +79,7 @@ class TrackerService : Service() {
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(getString(R.string.app_name))
             .setContentText(getString(R.string.notification_text))
-            .setOngoing(true)
+//            .setOngoing(true)
             .setContentIntent(broadcastIntent)
             .setSmallIcon(R.drawable.ic_tracker);
         startForeground(1, builder.build())
@@ -107,67 +96,12 @@ class TrackerService : Service() {
         }
     }
 
-
-
-    private fun loginToFirebase() {
-        // Authenticate with Firebase, and request location updates
-//        val email = getString(R.string.firebase_email)
-//        val password = getString(R.string.firebase_password)
-//        FirebaseAuth.getInstance().signInWithEmailAndPassword(
-//            email, password
-//        ).addOnCompleteListener { task ->
-//            if (task.isSuccessful) {
-//                Log.d(tag, "firebase auth success")
-//                requestLocationUpdates()
-//            } else {
-//                Log.d(tag, "firebase auth failed")
-//            }
-//        }
-        user = FirebaseAuth.getInstance().currentUser
-
-        if (user != null) {
-//            requestLocationUpdates(groupId, token)
-        }
-
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(stopReceiver)
     }
 
-    private fun requestLocationUpdates(groupId: String, token: String) {
-        val request = LocationRequest()
-        request.interval = 10000
-        request.fastestInterval = 5000
-        request.numUpdates = 2
-        request.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        val client = LocationServices.getFusedLocationProviderClient(this)
-//        val path = getString(R.string.firebase_path) + "/" + getString(R.string.transport_id)
-        val permission = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
-        if (permission == PackageManager.PERMISSION_GRANTED) {
-            // Request location updates and when an update is
-            // received, store the location in Firebase
-            client.requestLocationUpdates(request, object : LocationCallback() {
-                override fun onLocationResult(locationResult: LocationResult?) {
-//                    val ref = FirebaseDatabase.getInstance().getReference(path)
-                    val location = locationResult!!.lastLocation
-//                    location.provider = user?.photoUrl.toString()
-                    if (location != null) {
-                        Log.d(tag, "location update $location")
-//                        ref.setValue(location)
-                        val locationData = HashMap<String, Any?>()
-                        locationData["location"] = location
-                        val db = FirebaseFirestore.getInstance()
-                        db.collection("groups").document(groupId).collection("devices")
-                            .document(token)
-                            .set(locationData, SetOptions.merge())
-//                        stopSelf()
-                    }
 
-
-                }
-            }, null)
-        }
-    }
 
 
 }

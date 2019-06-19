@@ -37,7 +37,7 @@ class GroupInfoActivity : AppCompatActivity() {
     }
 
     private fun handleIntent() {
-        val groupId = intent.getStringExtra(KEY_GROUP_ID) ?: return
+        val groupId = intent.getStringExtra(GROUP_ID) ?: return
 
         val db = FirebaseFirestore.getInstance()
         val docRef = db.document("$GROUPS/$groupId")
@@ -56,10 +56,10 @@ class GroupInfoActivity : AppCompatActivity() {
     private fun updateUI() {
         groupData?.apply {
             group_name.text = this[GROUP_NAME] as String
-            val timestampCreated = this[CREATED_AT] as Timestamp
-            val dtStr = getDateInstance().format(timestampCreated.toDate())
+            val timestampCreated = this[CREATED_AT] as? Timestamp
+            val dtStr = getDateInstance().format(timestampCreated?.toDate())
             group_date.text = dtStr
-            @Suppress("UNCHECKED_CAST")
+//            @Suppress("UNCHECKED_CAST")
             val founder = this[GROUP_FOUNDER] as? HashMap<String, Any>
             group_founder.text = founder?.get(NAME) as String
             if (BuildConfig.DEBUG) {

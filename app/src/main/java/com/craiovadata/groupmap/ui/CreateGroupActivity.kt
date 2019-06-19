@@ -115,7 +115,7 @@ class CreateGroupActivity : AppCompatActivity() {
             val msg = getString(R.string.toast_group_created_success)
             Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
             val resultIntent = Intent(this, GroupInfoActivity::class.java)
-            resultIntent.putExtra(KEY_GROUP_ID, groupId)
+            resultIntent.putExtra(GROUP_ID, groupId)
             setResult(RESULT_OK, resultIntent)
             finish()
         }
