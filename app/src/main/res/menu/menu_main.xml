@@ -23,24 +23,7 @@
         android:id="@+id/action_group_members"
         android:title="Members" />
 
-    <item
-        android:id="@+id/action_privacy_policy"
-        android:title="Privacy policy" />
-    <item
-        android:id="@+id/action_join_group_x"
-        android:title="Join group X" />
 
-    <item
-        android:id="@+id/action_leave_group"
-        android:title="Leave group X" />
-
-    <item
-        android:id="@+id/action_logout"
-        android:title="Logout" />
-
-    <item
-        android:id="@+id/action_login"
-        android:title="Login" />
     <item
         android:id="@+id/action_group_info"
         android:title="Group info" />

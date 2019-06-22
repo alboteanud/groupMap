@@ -188,7 +188,10 @@ class MainActivity : AppCompatActivity() {
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.action_settings -> {
-//                startActivity(Intent(this, SettingsActivity::class.java))
+                startActivity(Intent(this, SettingsActivity::class.java))
+                return true
+            } R.id.action_my_groups -> {
+                startActivity(Intent(this, MyGroupsActivity::class.java))
                 return true
             }
             R.id.action_create_group -> {
@@ -196,33 +199,6 @@ class MainActivity : AppCompatActivity() {
                     Intent(this, CreateGroupActivity::class.java),
                     CREATE_GROUP_REQUEST
                 )
-                return true
-            }
-            R.id.action_refresh -> {
-                requestPositionUpdatesFromOthers()
-                return true
-            }
-//            R.id.action_join_group_x -> {
-//                joinGroup(this, groupId) {
-//                    subscribeToGroupUpdates()
-//                }
-//                return true
-//            }
-            R.id.action_leave_group -> {
-                leaveGroup(groupId)
-                return true
-            }
-            R.id.action_logout -> {
-                FirebaseAuth.getInstance().signOut()
-                return true
-            }
-            R.id.action_login -> {
-                val currentUser = FirebaseAuth.getInstance().currentUser
-                if (currentUser == null) {
-                    startLoginActivity(this)
-                } else {
-                    Toast.makeText(this, "You are already logged in", Toast.LENGTH_SHORT).show()
-                }
                 return true
             }
             R.id.action_group_info -> {
@@ -235,7 +211,6 @@ class MainActivity : AppCompatActivity() {
                 groupData?.get(GROUP_SHARE_KEY)?.let {
                     startActionShare(this, it)
                 }
-
                 return true
             }
             else -> super.onOptionsItemSelected(item)
