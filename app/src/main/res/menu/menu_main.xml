@@ -4,33 +4,28 @@
     tools:context="com.craiovadata.test.MainActivity">
 
     <item
-        android:id="@+id/action_settings"
-        android:title="@string/action_settings" />
-
-    <item
-        android:id="@+id/action_create_group"
-        android:title="@string/action_create_group" />
-
-    <item
-        android:id="@+id/action_my_groups"
-        android:title="My groups" />
-
-    <item
-        android:id="@+id/action_refresh"
-        android:title="Refresh" />
-
-    <item
-        android:id="@+id/action_group_members"
-        android:title="Members" />
-
-
-    <item
-        android:id="@+id/action_group_info"
+        android:id="@+id/menu_item_group_info"
         android:title="Group info" />
 
     <item
-        android:id="@+id/menu_item_share"
-        android:title="Share group" />
+        android:id="@+id/menu_item_invite"
+        android:title="Invite to group" />
+
+    <item
+        android:id="@+id/menu_item_new_group"
+        android:title="@string/action_create_group" />
+  <item
+        android:id="@+id/menu_item_my_groups"
+        android:title="My groups" />
+
+    <item
+        android:id="@+id/menu_item_settings"
+        android:title="@string/action_settings" />
+
+  <item
+        android:id="@+id/menu_item_exit"
+        android:title="Exit group" />
+
 
 
 </menu>

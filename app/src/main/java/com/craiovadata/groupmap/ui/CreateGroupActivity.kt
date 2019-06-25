@@ -9,13 +9,12 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.craiovadata.groupmap.R
 import com.craiovadata.groupmap.utils.*
-import com.craiovadata.groupmap.utils.Util.getUserData
 import com.craiovadata.groupmap.utils.Util.startLoginActivity
 import com.firebase.ui.auth.ErrorCodes
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.android.synthetic.main.activity_create_group.*
 import kotlinx.android.synthetic.main.content_create_group.*
 
@@ -43,7 +42,6 @@ class CreateGroupActivity : AppCompatActivity() {
             createGroup()
         }
     }
-
 
 
     private fun updateUI() {
@@ -97,28 +95,30 @@ class CreateGroupActivity : AppCompatActivity() {
         }
         val refGroup = db.collection(GROUPS).document()
         val groupId = refGroup.id
-        val refUserGroup = db.collection(USERS).document(currentUser.uid)
+        val refUser = db.collection(USERS).document(currentUser.uid)
             .collection(GROUPS).document(groupId)
 
         val group = HashMap<String, Any?>()
         group[GROUP_NAME] = groupName
-        group[GROUP_FOUNDER] = getUserData()
-        group[CREATED_AT] = FieldValue.serverTimestamp()
-        group[GROUP_SHARE_KEY] = groupId
+//        group[GROUP_FOUNDER] = getUserData()
+//        group[CREATED_AT] = FieldValue.serverTimestamp()
+        group[GROUP_SHARE_KEY] = db.collection(GROUP_SHARE_KEY).document().id
+        group[ADMINISTRATORS] = listOf(currentUser.uid)
 
         val batch = db.batch()
         batch.set(refGroup, group)
-        batch.set(refUserGroup, hashMapOf(JOINED to true))
+        batch.set(refUser, hashMapOf(JOINED to true, GROUP_NAME to groupName))
+        batch.set(refGroup.collection(USERS).document(currentUser.uid), hashMapOf(IS_ADMIN to true), SetOptions.merge())
 
         batch.commit()
             .addOnSuccessListener {
-            val msg = getString(R.string.toast_group_created_success)
-            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
-            val resultIntent = Intent(this, GroupInfoActivity::class.java)
-            resultIntent.putExtra(GROUP_ID, groupId)
-            setResult(RESULT_OK, resultIntent)
-            finish()
-        }
+                val msg = getString(R.string.toast_group_created_success)
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                val resultIntent = Intent(this, GroupInfoActivity::class.java)
+                resultIntent.putExtra(GROUP_ID, groupId)
+                setResult(RESULT_OK, resultIntent)
+                finish()
+            }
             .addOnFailureListener {
                 val msg = getString(R.string.toast_group_creation_error)
                 Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()

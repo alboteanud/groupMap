@@ -11,7 +11,7 @@
     android:padding="8dp">
 
     <ImageView
-        android:id="@+id/groupPhoto"
+        android:id="@+id/memberPhoto"
         android:layout_width="42dp"
         android:layout_height="42dp"
         android:layout_marginStart="8dp"
@@ -19,26 +19,41 @@
         android:layout_marginBottom="8dp"
         android:background="#aaa"
         android:scaleType="centerCrop"
-        android:src="@drawable/ic_people"
+        android:src="@drawable/ic_person_pin"
         android:contentDescription="@string/description_person_icon"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/groupName"
+        android:id="@+id/memberName"
         style="@style/AppTheme.Body1"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/groupPhoto"
+        android:layout_alignTop="@+id/memberPhoto"
         android:layout_marginStart="12dp"
-        android:layout_toEndOf="@+id/groupPhoto"
+        android:layout_marginEnd="12dp"
+        android:layout_toEndOf="@+id/memberPhoto"
         android:ellipsize="end"
         android:maxLines="1"
-        app:layout_constraintBottom_toBottomOf="@+id/groupPhoto"
-        app:layout_constraintStart_toEndOf="@+id/groupPhoto"
-        app:layout_constraintTop_toTopOf="@+id/groupPhoto"
-        tools:text="My group" />
+        app:layout_constraintBottom_toBottomOf="@+id/memberPhoto"
+        app:layout_constraintEnd_toStartOf="@+id/isAdminText"
+        app:layout_constraintStart_toEndOf="@+id/memberPhoto"
+        app:layout_constraintTop_toTopOf="@+id/memberPhoto"
+        tools:text="Anca Elena" />
+
+    <TextView
+        android:id="@+id/isAdminText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/memberPhoto"
+        android:layout_alignBottom="@+id/memberPhoto"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/memberPhoto"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/memberPhoto"
+        tools:text="group admin"
+        android:visibility="gone"/>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

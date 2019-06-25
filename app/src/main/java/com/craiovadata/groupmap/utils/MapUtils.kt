@@ -2,14 +2,17 @@ package com.craiovadata.groupmap.utils
 
 import android.Manifest
 import android.app.Activity
+import android.app.Application
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.location.Location
 import android.location.LocationManager
+import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
@@ -22,6 +25,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.*
 import com.google.firebase.firestore.QueryDocumentSnapshot
+import java.lang.IllegalStateException
 
 object MapUtils {
 
@@ -108,10 +112,11 @@ object MapUtils {
         // for locations received, so that we can build the
         // boundaries required to show them all on the map at once
         val key = document.id
-        var locationData = document.data[LOCATION] ?: return
-        locationData = locationData as HashMap<*, *>
-        val lat = locationData[LATITUDE] as Double
-        val lng = locationData[LONGITUDE] as Double
+
+        val locationData = (document.data[LOCATION] as? HashMap<String, Any?>) ?: return
+        val lat = locationData[LATITUDE] as? Double
+        val lng = locationData[LONGITUDE] as? Double
+        if (lat == null || lng == null) return
         val location = LatLng(lat, lng)
         if (!mMarkers.containsKey(key)) {
             var userName = document.data[NAME] as String
@@ -133,7 +138,11 @@ object MapUtils {
         }
         if (mMarkers.isNotEmpty()) {
             val padding = 80
-            mMap?.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), padding))
+            try {
+                mMap?.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), padding))
+            } catch (e: IllegalStateException) {
+                e.printStackTrace()
+            }
         }
 
     }
@@ -142,6 +151,7 @@ object MapUtils {
         if (iconUrl == null) return
         if (marker == null) return
         if (context == null) return
+
 
         Glide.with(context)
             .asBitmap()

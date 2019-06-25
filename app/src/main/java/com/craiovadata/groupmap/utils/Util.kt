@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat.startActivity
 import com.craiovadata.groupmap.BuildConfig
 import com.craiovadata.groupmap.R
 import com.craiovadata.groupmap.ui.CreateGroupActivity
+import com.craiovadata.groupmap.utils.GroupUtils.exitGroup
 import com.firebase.ui.auth.AuthUI
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
@@ -109,10 +110,24 @@ object Util {
 
     fun buildAlertMessageNoGps(context: Context) {
         val builder = AlertDialog.Builder(context);
-        builder.setMessage("Your GPS is disabled, do you want to enable it?")
+        builder.setMessage("Your GPS is disabled. Do you want to enable it?")
             .setCancelable(false)
             .setPositiveButton("Yes") { _, _ -> context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)) }
             .setNegativeButton("No") { dialog, _ -> dialog.cancel(); }
+        val alert = builder.create();
+        alert.show();
+    }
+
+    fun buildAlertExitGroup(context: Context, groupId: String, groupName: String, callback: () -> Unit) {
+        val builder = AlertDialog.Builder(context);
+        builder.setMessage("Exit \"$groupName\" group?")
+            .setCancelable(false)
+            .setPositiveButton("EXIT") { _, _ ->
+                exitGroup(groupId) {
+                    callback.invoke()
+                }
+            }
+            .setNegativeButton("CANCEL") { dialog, _ -> dialog.cancel(); }
         val alert = builder.create();
         alert.show();
     }
@@ -144,7 +159,7 @@ object Util {
 
 
     fun getDummyUsers(): Array<HashMap<String, Serializable>> {
-         return arrayOf(
+        return arrayOf(
             hashMapOf(
                 NAME to "Dan",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-JwqhJ989hXw/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3rdvLnxofP2V96sjhxQ0lXf2HrRgKg.CMID/s64-c-mo/photo.jpg",
@@ -172,7 +187,6 @@ object Util {
             )
         )
     }
-    
 
 
     fun deleteMessagingDeviceToken() {

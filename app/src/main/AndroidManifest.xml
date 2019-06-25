@@ -48,7 +48,8 @@
         <activity
             android:name=".ui.MainActivity"
             android:label="@string/title_activity_maps"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"
+            >
             <tools:validation testUrl="https://groupmap-6b346.web.app/group/GuquljW1zZTfv0O0T93E" />
             <tools:validation testUrl="https://groupmap-6b346.web.app" />
 

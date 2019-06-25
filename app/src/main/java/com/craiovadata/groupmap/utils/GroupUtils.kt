@@ -4,59 +4,66 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
 import com.android.installreferrer.api.ReferrerDetails
 import com.craiovadata.groupmap.BuildConfig
 import com.craiovadata.groupmap.R
+import com.google.android.gms.common.api.Batch
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
+import kotlinx.android.synthetic.main.content_main.*
 
 object GroupUtils {
 
-    fun joinGroup(context: Context, groupId: String, listener: () -> Unit) {
-        FirebaseAuth.getInstance().currentUser?.apply {
-            val ref =  FirebaseFirestore.getInstance()
-                .collection(USERS).document(uid)
-                .collection(GROUPS).document(groupId)
+    fun joinGroup(groupId: String, groupName: String, listener: () -> Unit) {
+        val user = FirebaseAuth.getInstance().currentUser ?: return
+        val db = FirebaseFirestore.getInstance()
+        val ref = db
+            .collection(USERS).document(user.uid)
+            .collection(GROUPS).document(groupId)
 
-            ref.set(hashMapOf(JOINED to true)).addOnCompleteListener { task ->
+        ref.set(hashMapOf(JOINED to true, GROUP_NAME to groupName))
+            .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     listener.invoke()
-                } else {
-                    val msg = context.getString(R.string.toast_group_creation_error)
-                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                 }
             }
-        }
     }
 
-    fun leaveGroup(groupId: String) {
-        FirebaseAuth.getInstance().currentUser?.apply {
-            val ref = FirebaseFirestore.getInstance()
-                .collection(USERS).document(uid)
-                .collection(GROUPS).document(groupId)
-//        ref.delete()
-            ref.set(hashMapOf(JOINED to false))
-        }
+    fun exitGroup(groupId: String, listener: () -> Unit) {
+        val user = FirebaseAuth.getInstance().currentUser ?: return
+        val db = FirebaseFirestore.getInstance()
+        val ref = db
+            .collection(USERS).document(user.uid)
+            .collection(GROUPS).document(groupId)
 
-    }
-
-     fun startActionShare(context: Context, groupShareKey: Any?) {
-            val baseUrl = context.getString(R.string.base_share_url)
-            val myUrl = baseUrl + groupShareKey
-            val sendIntent: Intent = Intent().apply {
-                action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_TEXT, "share link: $myUrl")
-                type = "text/plain"
+        ref.set(hashMapOf(JOINED to false), SetOptions.merge())
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    listener.invoke()
+                }
             }
-            context.startActivity(Intent.createChooser(sendIntent, "send_to"))
+    }
+
+    fun startActionShare(context: Context, groupShareKey: Any?) {
+        val baseUrl = context.getString(R.string.base_share_url)
+        val myUrl = baseUrl + groupShareKey
+        val sendIntent: Intent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, "share link: $myUrl")
+            type = "text/plain"
+        }
+        context.startActivity(Intent.createChooser(sendIntent, "send_to"))
 
     }
 
     fun populateDefaultGroup() {
-        if(!BuildConfig.DEBUG) return
+        if (!BuildConfig.DEBUG) return
         Log.d(Util.TAG, "start populate default group")
         val db = FirebaseFirestore.getInstance()
         val batch = db.batch()
@@ -97,19 +104,22 @@ object GroupUtils {
 
 
     fun getGroupKeyFromIntent(activity: Activity): String? {
-        val appLinkIntent = activity.intent
-//        val appLinkAction = appLinkIntent.action
-        val appLinkData = appLinkIntent.data
-
-        if (appLinkData != null) {
-            val segments = appLinkData.pathSegments
-            if (segments.size >= 2) {
-                if (segments[0] == "group") {
-                    return segments[1]
-                }
+        val appLinkData = activity.intent.data ?: return null
+        val segments = appLinkData.pathSegments
+        if (segments.size >= 2) {
+            if (segments[0] == "group") {
+                return segments[1]
             }
         }
         return null
+    }
+
+    fun buildAlertJoinGroup(view: View, callback: (didJoin: Boolean) -> Unit) {
+        Snackbar.make(view, "Join group?", Snackbar.LENGTH_INDEFINITE)
+            .setAction("Yes") {
+                callback.invoke(true)
+            }
+            .show()
     }
 
 }
