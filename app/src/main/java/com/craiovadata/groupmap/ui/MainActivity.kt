@@ -2,7 +2,6 @@ package com.craiovadata.groupmap.ui
 
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -15,9 +14,6 @@ import com.craiovadata.groupmap.utils.GroupUtils.buildAlertJoinGroup
 import com.craiovadata.groupmap.utils.GroupUtils.checkInstallReffererForGroupKey
 import com.craiovadata.groupmap.utils.GroupUtils.getGroupKeyFromIntent
 import com.craiovadata.groupmap.utils.GroupUtils.joinGroup
-import com.craiovadata.groupmap.utils.GroupUtils.startActionShare
-import com.craiovadata.groupmap.utils.MapUtils.checkLocationPermission
-import com.craiovadata.groupmap.utils.MapUtils.enableMyLocationOnMap
 import com.craiovadata.groupmap.utils.MapUtils.setMarker
 import com.craiovadata.groupmap.utils.MapUtils.zoomOnMe
 import com.craiovadata.groupmap.utils.Util.buildAlertExitGroup
@@ -28,7 +24,6 @@ import com.firebase.ui.auth.IdpResponse
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.Marker
-import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.*
@@ -41,7 +36,7 @@ class MainActivity : AppCompatActivity() {
     private var currentUser: FirebaseUser? = null
     private lateinit var db: FirebaseFirestore
     private val mMarkers = hashMapOf<String, Marker?>()
-    private lateinit var groupId: String
+    private var groupId: String = NO_GROUP
     private var groupData: Map<String, Any>? = null
     private var positionListenerRegistration: ListenerRegistration? = null
 
@@ -53,6 +48,9 @@ class MainActivity : AppCompatActivity() {
         setAuthStateListener()
         initMap()
 //        populateDefaultGroup()
+        fabMyLocation.setOnClickListener {
+            zoomOnMe(this, mMap)
+        }
     }
 
     private fun initMap() {
@@ -63,10 +61,15 @@ class MainActivity : AppCompatActivity() {
             mMap?.setMaxZoomPreference(16f)
             initGroupData()
 //            requestGpsLocationUpdates(this)
-            enableMyLocationOnMap(this, mMap)
-
+//            enableMyLocationOnMap(this, mMap)
+//            if (groupId != DEFAULT_GROUP) {
+//                checkLocationPermission(this) {
+//                    mMap?.isMyLocationEnabled = true
+//                    mMap?.uiSettings?.isMyLocationButtonEnabled = true
+//
+//                }
+//            }
         }
-        checkLocationPermission(this, mMap)
     }
 
     private fun initGroupData() {
@@ -120,19 +123,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        val groupShareKey = groupData?.get(GROUP_SHARE_KEY)
-
-        val admins = (groupData?.get(ADMINISTRATORS) as? ArrayList<*>)?.filterIsInstance<String>()
-        val isAdmin = admins?.contains(currentUser?.uid)
-        var visiblility = false
-        if (groupShareKey != null && isAdmin != null && isAdmin == true) {
-            visiblility = true
-        }
-        menu?.findItem(R.id.menu_item_invite)?.isVisible = visiblility
-        return super.onPrepareOptionsMenu(menu)
-    }
-
     private fun setAuthStateListener() {
         FirebaseAuth.getInstance().addAuthStateListener {
             currentUser = it.currentUser
@@ -165,18 +155,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        if (requestCode == PERMISSIONS_REQUEST && grantResults.size == 1
-            && grantResults[0] == PackageManager.PERMISSION_GRANTED
-        ) {
-            // Start the service when the permission is granted
-            enableMyLocationOnMap(this, mMap)
-        } else {
-            // permission not granted
-//            finish()
-        }
-    }
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
@@ -185,26 +163,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item_member clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.menu_item_settings -> {
                 startActivity(Intent(this, SettingsActivity::class.java))
                 return true
             }
-            R.id.menu_item_my_groups -> {
-                startActivityForResult(
-                    Intent(this, MyGroupsActivity::class.java),
-                    CHOOSE_GROUP_REQUEST
-                )
-                return true
-            }
             R.id.menu_item_new_group -> {
-                startActivityForResult(
-                    Intent(this, CreateGroupActivity::class.java),
-                    CREATE_GROUP_REQUEST
-                )
+                startActivityForResult(Intent(this, CreateGroupActivity::class.java), CREATE_GROUP_REQUEST)
                 return true
             }
             R.id.menu_item_group_info -> {
@@ -213,18 +178,10 @@ class MainActivity : AppCompatActivity() {
                 startActivity(intent)
                 return true
             }
-            R.id.menu_item_invite -> {
-                groupData?.get(GROUP_SHARE_KEY)?.let {
-                    startActionShare(this, it)
-                }
-                return true
-            }
             R.id.menu_item_exit -> {
                 val groupName = groupData?.get(GROUP_NAME) as? String ?: "My Group"
                 buildAlertExitGroup(this, groupId, groupName) {
-                    Toast.makeText(this, "You left \"$groupName\" group", Toast.LENGTH_LONG).show()
-                    unsubscribeFromGroup()
-                    title = getString(R.string.app_name)
+                    exitGroup()
                 }
                 return true
             }
@@ -276,18 +233,6 @@ class MainActivity : AppCompatActivity() {
 
                 }
             }
-        } else if (requestCode == CHOOSE_GROUP_REQUEST) {
-            if (resultCode == RESULT_OK) {
-                // a group was just created
-                data?.getStringExtra(GROUP_ID)?.let { resultId ->
-                    groupId = resultId
-                    getGroupData(null)
-//                    zoomOnMe(this, mMap)
-                    getSharedPreferences("_", MODE_PRIVATE).edit()
-                        .putString(GROUP_ID, groupId).apply()
-
-                }
-            }
         }
     }
 
@@ -316,7 +261,6 @@ class MainActivity : AppCompatActivity() {
                             joinGroup(groupId, groupName) {
                                 requestPositionUpdatesFromOthers()
                                 setPositionsListener()
-                                buildPolicyAlert()
                             }
                         }
                     }
@@ -327,25 +271,19 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
-    private fun buildPolicyAlert() {
-        Snackbar.make(content_main, "You joined the group.", Snackbar.LENGTH_LONG)
-            .setAction("Privacy policy") {
-                val intent = Intent(this@MainActivity, PrivacyActivity::class.java)
-                startActivity(intent)
-            }.show()
-    }
-
-    fun unsubscribeFromGroup() {
+    private fun exitGroup() {
+        getSharedPreferences("_", Context.MODE_PRIVATE).edit().putString(GROUP_ID, null).apply()
+        title = getString(R.string.app_name)
+        db.document("$USERS/${currentUser?.uid}/$groupId").delete()
+            .addOnSuccessListener {
+                Toast.makeText(this, "You left the group", Toast.LENGTH_LONG).show()
+            }
         positionListenerRegistration?.remove()
         mMap?.clear()
         groupId = NO_GROUP
         groupData = null
         mMarkers.clear()
-        getSharedPreferences("_", Context.MODE_PRIVATE).edit().putString(GROUP_ID, null).apply()
-
     }
-
-    // todo save active group not in prefs. Will ask to join on removed groups
 
     private fun setPositionsListener(mask: Boolean = false) {
         positionListenerRegistration?.remove()
@@ -364,7 +302,6 @@ class MainActivity : AppCompatActivity() {
                         DocumentChange.Type.REMOVED -> {
                             Log.d(TAG, "Removed doc: ${dc.document.data}")
                             mMarkers.remove(dc.document.id)
-//                            setMarker(this, dc.document, true, mMarkers, mMap)
                         }
                     }
                 }

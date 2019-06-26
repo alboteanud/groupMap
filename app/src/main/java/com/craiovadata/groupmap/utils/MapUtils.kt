@@ -31,7 +31,7 @@ object MapUtils {
 
     // Check location permission is granted - if it is, start
     // the service, otherwise request the permission
-    fun checkLocationPermission(activity: Activity, map: GoogleMap?) {
+    fun checkLocationPermission(activity: Activity, callback: () -> Unit) {
         // Check GPS is enabled
         val lm = activity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         if (!lm.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
@@ -44,21 +44,13 @@ object MapUtils {
         // the service, otherwise request the permission
         val permission = ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION)
         if (permission == PackageManager.PERMISSION_GRANTED) {
-            enableMyLocationOnMap(activity, map)
+            callback.invoke()
         } else {
             ActivityCompat.requestPermissions(
                 activity,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 PERMISSIONS_REQUEST
             )
-        }
-    }
-
-    fun enableMyLocationOnMap(context: Context, map: GoogleMap?) {
-        val permission = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
-        if (permission == PackageManager.PERMISSION_GRANTED) {
-            map?.isMyLocationEnabled = true
-            map?.uiSettings?.isMyLocationButtonEnabled = true
         }
     }
 
@@ -87,16 +79,15 @@ object MapUtils {
         }
     }
 
-    fun zoomOnMe(context: Context, map: GoogleMap?) {
-        requestMyGpsLocation(context) { location ->
-            map?.animateCamera(
-                CameraUpdateFactory.newLatLngZoom(
-                    LatLng(
-                        location.latitude,
-                        location.longitude
-                    ), 13F
-                )
-            )
+    fun zoomOnMe(activity: Activity, map: GoogleMap?) {
+        checkLocationPermission(activity){
+            map?.isMyLocationEnabled = true
+            map?.uiSettings?.isMyLocationButtonEnabled = true
+            requestMyGpsLocation(activity) { location ->
+                val builder = LatLngBounds.Builder()
+                builder.include(LatLng(location.latitude, location.longitude))
+                map?.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 80))
+            }
         }
     }
 

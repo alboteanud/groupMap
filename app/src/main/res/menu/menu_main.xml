@@ -8,15 +8,8 @@
         android:title="Group info" />
 
     <item
-        android:id="@+id/menu_item_invite"
-        android:title="Invite to group" />
-
-    <item
         android:id="@+id/menu_item_new_group"
         android:title="@string/action_create_group" />
-  <item
-        android:id="@+id/menu_item_my_groups"
-        android:title="My groups" />
 
     <item
         android:id="@+id/menu_item_settings"

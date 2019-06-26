@@ -50,7 +50,8 @@ object GroupUtils {
             }
     }
 
-    fun startActionShare(context: Context, groupShareKey: Any?) {
+    fun startActionShare(context: Context, groupShareKey: String?) {
+        if (groupShareKey==null) return
         val baseUrl = context.getString(R.string.base_share_url)
         val myUrl = baseUrl + groupShareKey
         val sendIntent: Intent = Intent().apply {

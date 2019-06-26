@@ -167,7 +167,7 @@ object Util {
             ),
             hashMapOf(
                 NAME to "Anca",
-                PHOTO_URL to "https://lh3.googleusercontent.com/-dFfcBHiIoTk/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3rd8xLcopVHADHFqH_8wDBHo5nd6IQ/mo/photo.jpg?sz=46",
+                PHOTO_URL to "https://lh3.googleusercontent.com/-dFfcBHiIoTk/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3rd8xLcopVHADHFqH_8wDBHo5nd6IQ/s64-c-mo/photo.jpg",
                 LOCATION to hashMapOf(LATITUDE to 40.596, LONGITUDE to -74.143)
             ),
             hashMapOf(

@@ -103,7 +103,6 @@ class CreateGroupActivity : AppCompatActivity() {
 //        group[GROUP_FOUNDER] = getUserData()
 //        group[CREATED_AT] = FieldValue.serverTimestamp()
         group[GROUP_SHARE_KEY] = db.collection(GROUP_SHARE_KEY).document().id
-        group[ADMINISTRATORS] = listOf(currentUser.uid)
 
         val batch = db.batch()
         batch.set(refGroup, group)

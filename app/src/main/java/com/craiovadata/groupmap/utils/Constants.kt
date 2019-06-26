@@ -32,7 +32,7 @@ const val LOCATION = "location"
 const val LATITUDE = "latitude"
 const val LONGITUDE = "longitude"
 const val TIMESTAMP = "timestamp"
-const val ADMINISTRATORS = "administrators"
+//const val ADMINISTRATORS = "administrators"
 const val IS_ADMIN = "isAdmin"
 
 

@@ -7,21 +7,21 @@ import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import com.craiovadata.groupmap.BuildConfig
 import com.craiovadata.groupmap.R
 import com.craiovadata.groupmap.adapter.MemberAdapter
 import com.craiovadata.groupmap.utils.*
 import com.craiovadata.groupmap.utils.GroupUtils.startActionShare
-import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.*
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.activity_group_info.*
 import kotlinx.android.synthetic.main.content_group_info.*
 
-class GroupInfoActivity : AppCompatActivity(), MemberAdapter.OnItemSelectedListener {
-    private var groupData: HashMap<String, Any>? = null
+class GroupInfoActivity : AppCompatActivity() {
     private var adapter: MemberAdapter? = null
-    lateinit var db: FirebaseFirestore
+    private lateinit var db: FirebaseFirestore
+    private var currentUser: FirebaseUser? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,17 +29,9 @@ class GroupInfoActivity : AppCompatActivity(), MemberAdapter.OnItemSelectedListe
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         db = FirebaseFirestore.getInstance()
+        currentUser = FirebaseAuth.getInstance().currentUser
         handleIntent()
-        button_share_group.setOnClickListener {
-            groupData?.get(GROUP_SHARE_KEY)?.let {
-                startActionShare(this, it)
-            }
-        }
-
-
-        setUpRecyclerView()
     }
-
 
     override fun onStart() {
         super.onStart()
@@ -51,11 +43,20 @@ class GroupInfoActivity : AppCompatActivity(), MemberAdapter.OnItemSelectedListe
         adapter?.stopListening()
     }
 
-    private fun setUpRecyclerView() {
-        val currentUser = FirebaseAuth.getInstance().currentUser ?: return
+    private fun setUpRecyclerView(groupId: String, currentUserData: MutableMap<String, Any>?) {
         val query = db.collection("$GROUPS/$groupId/$USERS")
 
-        adapter = object : MemberAdapter(query, this@GroupInfoActivity) {
+        adapter = object : MemberAdapter(query, object : OnItemSelectedListener {
+
+            override fun onItemSelected(member: DocumentSnapshot) {
+                val iAmAdmin = currentUserData?.get(IS_ADMIN) as? Boolean ?: false
+                if (iAmAdmin) {
+                    val uid = currentUser?.uid
+                    if (uid != null && uid != member.id)
+                        buildAlertMemberOptions(member, groupId)
+                }
+            }
+        }) {
 
             override fun onDataChanged() {
                 // Show/hide content if the query returns empty.
@@ -71,68 +72,33 @@ class GroupInfoActivity : AppCompatActivity(), MemberAdapter.OnItemSelectedListe
                     participantsText.text = text
                 }
             }
-
-            override fun onError(e: FirebaseFirestoreException) {
-                // Show a snackbar on errors
-                Snackbar.make(
-                    findViewById(android.R.id.content),
-                    "Error: check logs for info.", Snackbar.LENGTH_LONG
-                ).show()
-            }
         }
         recyclerParticipants.adapter = adapter
     }
 
-    override fun onItemSelected(member: DocumentSnapshot) {
-        val currentUser = FirebaseAuth.getInstance().currentUser ?: return
-        val admins = (groupData?.get(ADMINISTRATORS) as? ArrayList<*>)?.filterIsInstance<String>()
-        val iAmAdmin = admins?.contains(currentUser.uid) ?: false
-        if (member.id != currentUser.uid && iAmAdmin)
-            buildAlertMemberOptions(member)
-    }
-
-    private fun buildAlertMemberOptions(member: DocumentSnapshot) {
-        if (groupId == null) return
-
+    private fun buildAlertMemberOptions(member: DocumentSnapshot, groupId: String) {
         val isAdmin = member[IS_ADMIN] as? Boolean ?: false
 
-        var option = "Make group admin"
-        if (isAdmin) option = "Dismiss as admin"
-        val listOptions = arrayOf("Remove", option)
+        var listOptions = arrayOf("Remove", "Dismiss as admin")
+        if (!isAdmin) listOptions = arrayOf("Remove", "Make group admin")
 
-        val refUsr = db.document("$GROUPS/$groupId/$USERS/${member.id}")
-        val refGroup = db.document("$GROUPS/$groupId")
-
+        val refGrUser = db.document("$GROUPS/$groupId/$USERS/${member.id}")
+        val batch = db.batch()
         val builder = AlertDialog.Builder(this)
         builder.setItems(listOptions) { dialogInterface: DialogInterface, i: Int ->
             when (i) {
-
                 0 -> {
-                    val batch = db.batch()
-                    batch.delete(refUsr)
-                    if (isAdmin)
-                        batch.update(refGroup, ADMINISTRATORS, FieldValue.arrayRemove(member.id))
+                    batch.delete(refGrUser)
                     val refUser = db.document("$USERS/${member.id}/$GROUPS/$groupId")
-                    batch.set(refUser, mapOf(JOINED to false))
-                    batch.commit()
+                    batch.update(refUser, mapOf(JOINED to false))
                 }
                 1 -> {
-
-                    val batch = db.batch()
-                    batch.update(refUsr, mapOf(IS_ADMIN to !isAdmin))
-                    var operation = FieldValue.arrayUnion(member.id)        // make admin
-                    if (isAdmin)
-                        operation = FieldValue.arrayRemove(member.id)               // remove as admin
-                    batch.update(refGroup, ADMINISTRATORS, operation)
-                    batch.commit()
-
+                    batch.update(refGrUser, mapOf(IS_ADMIN to !isAdmin))
                 }
-
-
             }
+            batch.commit()
         }
-        val alert = builder.create();
-        alert.show();
+        builder.create().show();
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -141,40 +107,35 @@ class GroupInfoActivity : AppCompatActivity(), MemberAdapter.OnItemSelectedListe
         handleIntent()
     }
 
-    private var groupId: String? = null
     private fun handleIntent() {
-        groupId = intent.getStringExtra(GROUP_ID) ?: return
+        val groupId = intent.getStringExtra(GROUP_ID) ?: return
 
-        val db = FirebaseFirestore.getInstance()
-        val docRef = db.document("$GROUPS/$groupId")
-
-        docRef.get().addOnSuccessListener { snapshot ->
+        db.document("$GROUPS/$groupId")
+            .get().addOnSuccessListener { snapshot ->
+                if (snapshot != null && snapshot.exists()) {
+                    Log.d(TAG, "Current data: ${snapshot.data}")
+                    val groupData = snapshot.data
+                    updateUI(groupData)
+                } else {
+                    Log.d(TAG, "Current data: null")
+                }
+            }
+        db.document("$GROUPS/$groupId/$USERS/${currentUser?.uid}").get().addOnSuccessListener { snapshot ->
             if (snapshot != null && snapshot.exists()) {
-                Log.d(TAG, "Current data: ${snapshot.data}")
-                groupData = snapshot.data as HashMap<String, Any>
-                updateUI()
-            } else {
-                Log.d(TAG, "Current data: null")
+                val currentUserData = snapshot.data
+                setUpRecyclerView(groupId, currentUserData)
             }
         }
+
     }
 
-    private fun updateUI() {
-        groupData?.apply {
-            val groupName = this[GROUP_NAME] as? String ?: "My group"
-            title = groupName
-//            val timestampCreated = this[CREATED_AT] as? Timestamp
-//            val dtStr = getDateInstance().format(timestampCreated?.toDate())
-//            group_date.text = dtStr
-//            @Suppress("UNCHECKED_CAST")
-//            val founder = this[GROUP_FOUNDER] as? HashMap<String, Any>
-//            group_founder.text = founder?.get(NAME) as String
-            if (BuildConfig.DEBUG) {
-                val baseShareUrl = getString(R.string.base_share_url)
-                val groupLinkStr = baseShareUrl + this[GROUP_SHARE_KEY] as String?
-                group_link.text = groupLinkStr
+    private fun updateUI(groupData: MutableMap<String, Any>?) {
+        val groupName = groupData?.get(GROUP_NAME) as? String ?: "My group"
+        val shareKey = groupData?.get(GROUP_SHARE_KEY) as? String
 
-            }
+        title = groupName
+        button_share_group.setOnClickListener {
+            startActionShare(this, shareKey)
         }
     }
 
