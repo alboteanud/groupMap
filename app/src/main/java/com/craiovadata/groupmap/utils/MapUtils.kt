@@ -2,17 +2,14 @@ package com.craiovadata.groupmap.utils
 
 import android.Manifest
 import android.app.Activity
-import android.app.Application
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.location.Location
 import android.location.LocationManager
-import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.FragmentActivity
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
@@ -46,10 +43,11 @@ object MapUtils {
         if (permission == PackageManager.PERMISSION_GRANTED) {
             callback.invoke()
         } else {
+            // callback will be inside the activity
             ActivityCompat.requestPermissions(
                 activity,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                PERMISSIONS_REQUEST
+                PERMISSIONS_REQUEST_AND_ZOOM_ME
             )
         }
     }
@@ -80,7 +78,7 @@ object MapUtils {
     }
 
     fun zoomOnMe(activity: Activity, map: GoogleMap?) {
-        checkLocationPermission(activity){
+        checkLocationPermission(activity) {
             map?.isMyLocationEnabled = true
             map?.uiSettings?.isMyLocationButtonEnabled = true
             requestMyGpsLocation(activity) { location ->
@@ -89,6 +87,10 @@ object MapUtils {
                 map?.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 80))
             }
         }
+    }
+
+    fun handleMyLocation(activity: Activity, map: GoogleMap?) {
+
     }
 
     fun setMarker(

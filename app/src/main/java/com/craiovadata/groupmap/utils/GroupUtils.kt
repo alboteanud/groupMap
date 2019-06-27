@@ -65,7 +65,7 @@ object GroupUtils {
 
     fun populateDefaultGroup() {
         if (!BuildConfig.DEBUG) return
-        Log.d(Util.TAG, "start populate default group")
+        Log.d("Util", "start populate default group")
         val db = FirebaseFirestore.getInstance()
         val batch = db.batch()
         batch.set(db.collection(GROUPS).document(DEFAULT_GROUP), hashMapOf(GROUP_NAME to "The New Yorkers"))
@@ -77,7 +77,7 @@ object GroupUtils {
         batch.commit()
     }
 
-    fun checkInstallReffererForGroupKey(context: Context, callback: (groupKey: String?) -> Unit) {
+    fun getShareKeyFromInstallRefferer(context: Context, callback: (groupKey: String?) -> Unit) {
         // check if url contains group link code
         val referrerClient = InstallReferrerClient.newBuilder(context).build()
         referrerClient.startConnection(object : InstallReferrerStateListener {
@@ -103,8 +103,7 @@ object GroupUtils {
         })
     }
 
-
-    fun getGroupKeyFromIntent(activity: Activity): String? {
+    fun getShareKeyFromAppLinkIntent(activity: Activity): String? {
         val appLinkData = activity.intent.data ?: return null
         val segments = appLinkData.pathSegments
         if (segments.size >= 2) {
@@ -117,6 +116,13 @@ object GroupUtils {
 
     fun buildAlertJoinGroup(view: View, callback: (didJoin: Boolean) -> Unit) {
         Snackbar.make(view, "Join group?", Snackbar.LENGTH_INDEFINITE)
+            .setAction("Yes") {
+                callback.invoke(true)
+            }
+            .show()
+    }
+ fun buildAlertLoginToJoinGroup(view: View, callback: (didJoin: Boolean) -> Unit) {
+        Snackbar.make(view, "Login to join group?", Snackbar.LENGTH_INDEFINITE)
             .setAction("Yes") {
                 callback.invoke(true)
             }

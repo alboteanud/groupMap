@@ -60,39 +60,6 @@ object Util {
         return true
     }
 
-    private const val PLAY_SERVICES_RESOLUTION_REQUEST = 9000
-
-    private fun hideKeyboard(activity: Activity) {
-        val view = activity.currentFocus
-        if (view != null) {
-            (activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
-                .hideSoftInputFromWindow(view.windowToken, 0)
-        }
-    }
-
-    fun sendRegistrationToServer(currentUser: FirebaseUser?, token: String?) {
-        if (currentUser == null || token == null) return
-        val ref = FirebaseFirestore.getInstance().collection(FCM_TOKENS).document(token)
-        val userData = getUserData()
-        if (userData != null)
-            ref.set(userData)
-    }
-
-    fun getUserData(): HashMap<String, Any?>? {
-        val currentUser = FirebaseAuth.getInstance().currentUser ?: return null
-
-        val user = HashMap<String, Any?>()
-        user[UID] = currentUser.uid
-        var name = currentUser.displayName
-        if (name == null || name.isBlank()) name = currentUser.email
-        user[NAME] = name
-        user[EMAIL] = currentUser.email
-        currentUser.photoUrl?.let { uri ->
-            user[PHOTO_URL] = uri.toString()
-        }
-        return user
-    }
-
     fun startLoginActivity(activity: Activity) {
         val providers =
             arrayListOf(AuthUI.IdpConfig.EmailBuilder().build(), AuthUI.IdpConfig.GoogleBuilder().build())
@@ -106,7 +73,6 @@ object Util {
                 .build(), RC_SIGN_IN
         )
     }
-
 
     fun buildAlertMessageNoGps(context: Context) {
         val builder = AlertDialog.Builder(context);
@@ -132,7 +98,6 @@ object Util {
         alert.show();
     }
 
-
     fun getDownloadUri(context: Context, endUrl: String): Uri {
         val baseUrl = context.getString(R.string.base_download_url) + endUrl
         val appId = BuildConfig.APPLICATION_ID
@@ -142,7 +107,7 @@ object Util {
             .build()
     }
 
-    fun saveMessagingDeviceToken() {
+    fun sendDeviceTokenToServer() {
         FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { result ->
             FirebaseAuth.getInstance().currentUser?.apply {
                 val token = result.token
@@ -154,9 +119,6 @@ object Util {
             }
         }
     }
-
-    const val TAG = "Util"
-
 
     fun getDummyUsers(): Array<HashMap<String, Serializable>> {
         return arrayOf(
@@ -184,10 +146,14 @@ object Util {
                 NAME to "Droid",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-r_wtGPpwhGo/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3reJ6DA346tlC_Kv3OLbE_qdmt9r6Q.CMID/s64-c-mo/photo.jpg",
                 LOCATION to hashMapOf(LATITUDE to 40.774, LONGITUDE to -73.461)
+            ) ,
+            hashMapOf(
+                NAME to "Ionel",
+                PHOTO_URL to "https://lh3.googleusercontent.com/-FzX2I30Hhkw/AAAAAAAAAAI/AAAAAAAAFHY/ACHi3rc8vTf6ZzuNErb0cr5Ir9fem8AuvA.CMID/s64-c-mo/photo.jpg",
+                LOCATION to hashMapOf(LATITUDE to 40.614, LONGITUDE to -73.5)
             )
         )
     }
-
 
     fun deleteMessagingDeviceToken() {
         FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { result ->

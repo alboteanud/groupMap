@@ -43,7 +43,6 @@ class CreateGroupActivity : AppCompatActivity() {
         }
     }
 
-
     private fun updateUI() {
 //        hideProgressDialog()
         if (auth.currentUser != null) {

@@ -2,6 +2,7 @@ package com.craiovadata.groupmap.ui
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -11,32 +12,31 @@ import androidx.appcompat.app.AppCompatActivity
 import com.craiovadata.groupmap.R
 import com.craiovadata.groupmap.utils.*
 import com.craiovadata.groupmap.utils.GroupUtils.buildAlertJoinGroup
-import com.craiovadata.groupmap.utils.GroupUtils.checkInstallReffererForGroupKey
-import com.craiovadata.groupmap.utils.GroupUtils.getGroupKeyFromIntent
+import com.craiovadata.groupmap.utils.GroupUtils.buildAlertLoginToJoinGroup
+import com.craiovadata.groupmap.utils.GroupUtils.getShareKeyFromInstallRefferer
+import com.craiovadata.groupmap.utils.GroupUtils.getShareKeyFromAppLinkIntent
 import com.craiovadata.groupmap.utils.GroupUtils.joinGroup
 import com.craiovadata.groupmap.utils.MapUtils.setMarker
 import com.craiovadata.groupmap.utils.MapUtils.zoomOnMe
 import com.craiovadata.groupmap.utils.Util.buildAlertExitGroup
-import com.craiovadata.groupmap.utils.Util.saveMessagingDeviceToken
+import com.craiovadata.groupmap.utils.Util.sendDeviceTokenToServer
 import com.craiovadata.groupmap.utils.Util.startLoginActivity
 import com.firebase.ui.auth.ErrorCodes
 import com.firebase.ui.auth.IdpResponse
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.Marker
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 
 class MainActivity : AppCompatActivity() {
-
     private var mMap: GoogleMap? = null
     private var currentUser: FirebaseUser? = null
     private lateinit var db: FirebaseFirestore
     private val mMarkers = hashMapOf<String, Marker?>()
-    private var groupId: String = NO_GROUP
+    private lateinit var groupId: String
     private var groupData: Map<String, Any>? = null
     private var positionListenerRegistration: ListenerRegistration? = null
 
@@ -45,65 +45,83 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
         db = FirebaseFirestore.getInstance()
-        setAuthStateListener()
-        initMap()
-//        populateDefaultGroup()
+        groupId = getSharedPreferences("_", MODE_PRIVATE).getString(GROUP_ID, NO_GROUP) ?: NO_GROUP
+        initMap {
+            initGroupConnection { groupShareKey ->
+                getGroupData(groupShareKey)
+            }
+        }
         fabMyLocation.setOnClickListener {
             zoomOnMe(this, mMap)
+//            populateDefaultGroup()
         }
     }
 
-    private fun initMap() {
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == PERMISSIONS_REQUEST_AND_ZOOM_ME && grantResults.size == 1
+            && grantResults[0] == PackageManager.PERMISSION_GRANTED
+        ) {     // coming from MapUtils.checkLocationPermissions() - ActivityCompat.requestPermissions()
+            // Start the service when the permission is granted
+            zoomOnMe(this, mMap)
+        } else {
+            // permission not granted
+//            finish()
+        }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val groupShareKey = getShareKeyFromAppLinkIntent(this)
+        getGroupData(groupShareKey)
+    }
+
+    private fun initMap(callback: () -> Unit) {
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync {
-            mMap = it
+        mapFragment.getMapAsync { map ->
+            mMap = map
             mMap?.setMaxZoomPreference(16f)
-            initGroupData()
-//            requestGpsLocationUpdates(this)
-//            enableMyLocationOnMap(this, mMap)
-//            if (groupId != DEFAULT_GROUP) {
-//                checkLocationPermission(this) {
-//                    mMap?.isMyLocationEnabled = true
-//                    mMap?.uiSettings?.isMyLocationButtonEnabled = true
-//
-//                }
-//            }
+            callback.invoke()
         }
     }
 
-    private fun initGroupData() {
-        val prefs = getSharedPreferences("_", MODE_PRIVATE)
-        groupId = prefs.getString(GROUP_ID, NO_GROUP) ?: NO_GROUP
+    private fun initGroupConnection(callback: (shareKey: String?) -> Unit) {
         if (groupId == NO_GROUP) {  // first start
             groupId = DEFAULT_GROUP
-            prefs.edit().putString(GROUP_ID, groupId).apply()
-            checkInstallReffererForGroupKey(this) { groupKey ->
-                getGroupData(groupKey)
+            getSharedPreferences("_", MODE_PRIVATE).edit().putString(GROUP_ID, groupId).apply()
+            getShareKeyFromInstallRefferer(this) { groupShareKeyInstallRef ->
+                if (groupShareKeyInstallRef != null)
+                    callback.invoke(groupShareKeyInstallRef)
+                else {
+                    val groupShareKeyAppLink = getShareKeyFromAppLinkIntent(this)
+                    callback.invoke(groupShareKeyAppLink)
+                }
             }
         } else {
-            val groupKey = getGroupKeyFromIntent(this)
-            getGroupData(groupKey)
-        }
-    }
-
-    private fun handleGroupData() {
-        groupData?.apply {
-            title = this[GROUP_NAME] as? String
-            subscribeToGroupUpdates()
+            val groupShareKey = getShareKeyFromAppLinkIntent(this)
+            callback.invoke(groupShareKey)
         }
     }
 
     private fun getGroupData(groupShareKey: String?) {
-        if (groupShareKey != null) {
-
+        if (groupShareKey == null) {
+            db.collection(GROUPS).document(groupId).get()
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        groupData = task.result?.data
+                    }
+                    handleGroupData()
+                }
+        } else {
             db.collection(GROUPS).whereEqualTo(GROUP_SHARE_KEY, groupShareKey)
                 .get().addOnCompleteListener { task ->
                     if (task.isSuccessful) {
-                        task.result?.documents?.apply {
-                            if (this.isNotEmpty()) {
-                                groupData = this[0].data
-                                groupId = this[0].id
+                        task.result?.documents?.let { snap ->
+                            if (snap.isNotEmpty()) {
+                                groupData = snap[0].data
+                                groupId = snap[0].id
                                 getSharedPreferences("_", MODE_PRIVATE).edit()
                                     .putString(GROUP_ID, groupId).apply()
                             }
@@ -111,35 +129,15 @@ class MainActivity : AppCompatActivity() {
                     }
                     handleGroupData()
                 }
-
-        } else {
-            db.collection(GROUPS).document(groupId).get()
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        task.result?.apply { groupData = data }
-                    }
-                    handleGroupData()
-                }
         }
     }
 
-    private fun setAuthStateListener() {
-        FirebaseAuth.getInstance().addAuthStateListener {
-            currentUser = it.currentUser
-            if (currentUser != null) {
-                saveMessagingDeviceToken()
-            } else {
-                // todo need this?
-//                deleteMessagingDeviceToken()        // needs write permission but NOT_AUTH
-            }
+    private fun handleGroupData() {
+        val groupName = groupData?.get(GROUP_NAME) as? String ?: getString(R.string.app_name)
+        title = groupName
+        checkGroupAfiliation(groupName) { shouldMaskPins ->
+            setPositionsListener(shouldMaskPins)
         }
-    }
-
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-        val groupShareKey = getGroupKeyFromIntent(this) ?: return
-        getGroupData(groupShareKey)
     }
 
     private fun requestPositionUpdatesFromOthers() {
@@ -150,15 +148,12 @@ class MainActivity : AppCompatActivity() {
             if (!displayName.isNullOrBlank()) data[NAME] = displayName
             else data[NAME] = email
             data[TIMESTAMP] = FieldValue.serverTimestamp()
-
             db.document("$GROUPS/$groupId/$UPDATE_REQUEST/0").set(data)
         }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
-        // Return true to display menu
         return true
     }
 
@@ -191,104 +186,74 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-
         if (requestCode == RC_SIGN_IN) {
             val response = IdpResponse.fromResultIntent(data)
-
             if (resultCode == RESULT_OK) {
-                //authState listener will send token to server
-//                FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
-//                    val token = it.token
-//                    Util.sendRegistrationToServer(currentUser, token)
-//                }
-                subscribeToGroupUpdates()
+                sendDeviceTokenToServer()
+                initGroupConnection { groupShareKey ->
+                    getGroupData(groupShareKey)
+                }
             } else {
-                // Sign in failed. If response is null the user canceled the
-                // sign-in flow using the back button. Otherwise check
-                // response.getError().getErrorCode() and handle the error.
-                // ...
-                if (response == null) {
-                    // User pressed the back button.
-                    return
+                when {
+                    response == null -> {       // User pressed the back button.
+                    }
+                    response.error?.errorCode == ErrorCodes.NO_NETWORK ->
+                        Toast.makeText(this, getString(R.string.connection_error), Toast.LENGTH_SHORT).show()
+                    response.error?.errorCode == ErrorCodes.UNKNOWN_ERROR ->
+                        Toast.makeText(this, getString(R.string.error_default), Toast.LENGTH_SHORT).show()
                 }
-                if (response.error?.errorCode == ErrorCodes.NO_NETWORK) {
-                    Toast.makeText(this, getString(R.string.connection_error), Toast.LENGTH_SHORT).show();
-                    return
-                }
-
-                if (response.error?.errorCode == ErrorCodes.UNKNOWN_ERROR) {
-                    Toast.makeText(this, getString(R.string.error_default), Toast.LENGTH_SHORT).show();
-                    return
-                }
+                return
             }
-        } else if (requestCode == CREATE_GROUP_REQUEST) {
+        } else if (requestCode == CREATE_GROUP_REQUEST) {   // a group was just created
             if (resultCode == RESULT_OK) {
-                // a group was just created
-                data?.getStringExtra(GROUP_ID)?.let { resultId ->
-                    groupId = resultId
-                    getGroupData(null)
-                    zoomOnMe(this, mMap)
+                data?.getStringExtra(GROUP_ID)?.let { extra ->
+                    groupId = extra
                     getSharedPreferences("_", MODE_PRIVATE).edit()
                         .putString(GROUP_ID, groupId).apply()
+                }
+                getGroupData(null)
+                zoomOnMe(this, mMap)
+            }
+        }
+    }
 
+    private fun checkGroupAfiliation(groupName: String, callback: (maskPins: Boolean) -> Unit) {
+        if (groupId == DEFAULT_GROUP) {
+            callback.invoke(false)
+        } else if (currentUser == null) {
+            callback.invoke(true)
+            buildAlertLoginToJoinGroup(content_main) {
+                startLoginActivity(this)
+            }
+        } else {     //  check if currentUser is a member of the group
+            val ref = db.document("$GROUPS/$groupId/$USERS/${currentUser?.uid}")
+            ref.get().addOnCompleteListener { task ->
+                val result = task.result
+                if (task.isSuccessful && result != null && result.exists()) {
+                    val banned = result.data?.get(BANNED) as? Boolean ?: false
+                    if (banned) {
+                        Toast.makeText(this, "Unable to connect to group", Toast.LENGTH_LONG).show()
+                    } else {
+                        callback.invoke(false)
+                        requestPositionUpdatesFromOthers()
+                    }
+                } else {
+                    callback.invoke(true)
+                    buildAlertJoinGroup(content_main) {
+                        joinGroup(groupId, groupName) {
+                            callback.invoke(false)
+                            requestPositionUpdatesFromOthers()
+                        }
+                    }
                 }
             }
         }
     }
 
-    private fun subscribeToGroupUpdates() {
-        if (groupId == DEFAULT_GROUP) return setPositionsListener()
-        else if (currentUser == null) return startLoginActivity(this)
-
-        //  check if login and is member
-        db.document("$USERS/${currentUser!!.uid}/$GROUPS/$groupId").get()
-            .addOnCompleteListener { task ->
-                var joined: Boolean? = null
-                var banned: Boolean? = null
-                if (task.isSuccessful) {
-                    joined = task.result?.data?.get(JOINED) as? Boolean
-                    banned = task.result?.data?.get(BANNED) as? Boolean
-                }
-
-                var shouldMask = true
-                if (banned == null || !banned) {
-                    if (joined != null && joined) {
-                        requestPositionUpdatesFromOthers()
-                        shouldMask = false
-                    } else {
-                        buildAlertJoinGroup(content_main) {
-                            val groupName = groupData?.get(GROUP_NAME) as? String ?: "My Group"
-                            joinGroup(groupId, groupName) {
-                                requestPositionUpdatesFromOthers()
-                                setPositionsListener()
-                            }
-                        }
-                    }
-                    setPositionsListener(mask = shouldMask)
-                } else {
-                    Toast.makeText(this, "Unable to connect to group", Toast.LENGTH_SHORT).show()
-                }
-            }
-    }
-
-    private fun exitGroup() {
-        getSharedPreferences("_", Context.MODE_PRIVATE).edit().putString(GROUP_ID, null).apply()
-        title = getString(R.string.app_name)
-        db.document("$USERS/${currentUser?.uid}/$groupId").delete()
-            .addOnSuccessListener {
-                Toast.makeText(this, "You left the group", Toast.LENGTH_LONG).show()
-            }
+    private fun setPositionsListener(mask: Boolean) {
         positionListenerRegistration?.remove()
         mMap?.clear()
-        groupId = NO_GROUP
-        groupData = null
-        mMarkers.clear()
-    }
-
-    private fun setPositionsListener(mask: Boolean = false) {
-        positionListenerRegistration?.remove()
-        mMap?.clear()
-        positionListenerRegistration = db.collection(GROUPS).document(groupId).collection(DEVICES)
+        positionListenerRegistration = db.collection("$GROUPS/$groupId/$DEVICES")
             .addSnapshotListener(EventListener<QuerySnapshot> { snapshots, e ->
                 if (e != null) {
                     Log.w(TAG, "listen:error", e)
@@ -306,6 +271,20 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             })
+    }
+
+    private fun exitGroup() {
+        getSharedPreferences("_", Context.MODE_PRIVATE).edit().putString(GROUP_ID, null).apply()
+        db.document("$USERS/${currentUser?.uid}/$groupId").delete()
+            .addOnSuccessListener {
+                Toast.makeText(this, "You left the group", Toast.LENGTH_LONG).show()
+                title = getString(R.string.app_name)
+            }
+        positionListenerRegistration?.remove()
+        mMap?.clear()
+        groupId = NO_GROUP
+        groupData = null
+        mMarkers.clear()
     }
 
     companion object {

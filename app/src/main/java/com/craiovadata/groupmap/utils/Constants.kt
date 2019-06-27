@@ -9,11 +9,12 @@ const val NO_GROUP = "no_group"
 //const val GROUP_FOUNDER = "founder"
 const val GROUP_SHARE_KEY = "share_key"
 
-const val PERMISSIONS_REQUEST = 1
+const val PERMISSIONS_REQUEST_AND_ZOOM_ME = 1
 const val CREATE_GROUP_REQUEST = 2
 const val CHOOSE_GROUP_REQUEST = 3
 const val UPDATE_REQUEST = "updateRequest";
 const val RC_SIGN_IN = 9001
+const val PLAY_SERVICES_RESOLUTION_REQUEST = 9000
 
 const val DEVICES = "devices"
 const val FCM_TOKENS = "fcmTokens"
