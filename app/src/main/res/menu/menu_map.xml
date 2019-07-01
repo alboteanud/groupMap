@@ -15,10 +15,21 @@
         android:id="@+id/menu_item_settings"
         android:title="@string/action_settings" />
 
-  <item
+    <item
         android:id="@+id/menu_item_exit"
         android:title="Exit group" />
 
+ <item
+        android:id="@+id/menu_item_join"
+        android:title="Join group"
+     android:visible="false"/>
+
+    <item
+        android:id="@+id/menu_item_add_members"
+        android:icon="@android:drawable/ic_menu_add"
+        android:title="Invite participants"
+        app:showAsAction="ifRoom"
+        android:visible="false"/>
 
 
 </menu>

@@ -20,36 +20,36 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
+        <activity android:name=".ui.BaseActivity"></activity>
         <activity
             android:name=".ui.MyGroupsActivity"
             android:label="@string/title_activity_my_groups"
-            android:parentActivityName=".ui.MainActivity"
+            android:parentActivityName=".ui.MapActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.craiovadata.groupmap.ui.MainActivity" />
+                android:value="com.craiovadata.groupmap.ui.MapActivity" />
         </activity>
         <activity
             android:name=".ui.SettingsActivity"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".ui.MainActivity">
+            android:parentActivityName=".ui.MapActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.craiovadata.groupmap.ui.MainActivity" />
+                android:value="com.craiovadata.groupmap.ui.MapActivity" />
         </activity>
         <activity
             android:name=".ui.PrivacyActivity"
-            android:parentActivityName=".ui.MainActivity" />
+            android:parentActivityName=".ui.MapActivity" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
 
         <activity
-            android:name=".ui.MainActivity"
+            android:name=".ui.MapActivity"
             android:label="@string/title_activity_maps"
-            android:theme="@style/AppTheme.NoActionBar"
-            >
+            android:theme="@style/AppTheme.NoActionBar">
             <tools:validation testUrl="https://groupmap-6b346.web.app/group/GuquljW1zZTfv0O0T93E" />
             <tools:validation testUrl="https://groupmap-6b346.web.app" />
 
@@ -83,20 +83,20 @@
         <activity
             android:name=".ui.GroupInfoActivity"
             android:label="@string/title_activity_group_info"
-            android:parentActivityName=".ui.MainActivity"
+            android:parentActivityName=".ui.MapActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.craiovadata.groupmap.ui.MainActivity" />
+                android:value="com.craiovadata.groupmap.ui.MapActivity" />
         </activity>
         <activity
             android:name=".ui.CreateGroupActivity"
             android:label="@string/title_activity_create_group"
-            android:parentActivityName=".ui.MainActivity"
+            android:parentActivityName=".ui.MapActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.craiovadata.groupmap.ui.MainActivity" />
+                android:value="com.craiovadata.groupmap.ui.MapActivity" />
         </activity>
 
         <service

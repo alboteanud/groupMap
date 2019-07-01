@@ -76,7 +76,7 @@ class MyGroupsActivity : AppCompatActivity(), GroupAdapter.OnItemSelectedListene
     }
 
     override fun onItemSelected(group: DocumentSnapshot) {
-        val resultIntent = Intent(this, MainActivity::class.java)
+        val resultIntent = Intent(this, MapActivity::class.java)
         resultIntent.putExtra(GROUP_ID, group.id)
         setResult(RESULT_OK, resultIntent)
         finish()

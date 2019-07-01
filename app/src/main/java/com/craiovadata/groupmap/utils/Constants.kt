@@ -3,7 +3,7 @@ package com.craiovadata.groupmap.utils
 const val GROUP_NAME = "groupName"
 const val GROUP_ID = "groupId"
 const val GROUPS = "groups"
-const val GROUP_SHARE_KEYS = "group_share_keys"
+const val DB_GROUP_SHARE_KEYS = "group_share_keys"
 const val DEFAULT_GROUP: String = "defaultGroup"
 const val NO_GROUP = "no_group"
 //const val GROUP_FOUNDER = "founder"

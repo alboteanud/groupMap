@@ -1,37 +1,24 @@
 package com.craiovadata.groupmap.utils
 
-import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
-import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AlertDialog
-import androidx.core.app.ActivityCompat.startActivityForResult
-import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.startActivity
+import androidx.appcompat.app.AppCompatActivity
 import com.craiovadata.groupmap.BuildConfig
 import com.craiovadata.groupmap.R
-import com.craiovadata.groupmap.ui.CreateGroupActivity
-import com.craiovadata.groupmap.utils.GroupUtils.exitGroup
 import com.firebase.ui.auth.AuthUI
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.LocationServices
+import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.iid.FirebaseInstanceId
-import org.jetbrains.annotations.TestOnly
 import java.io.Serializable
-import java.util.*
-import kotlin.collections.HashMap
 
 
 object Util {
@@ -89,9 +76,7 @@ object Util {
         builder.setMessage("Exit \"$groupName\" group?")
             .setCancelable(false)
             .setPositiveButton("EXIT") { _, _ ->
-                exitGroup(groupId) {
-                    callback.invoke()
-                }
+                callback.invoke()
             }
             .setNegativeButton("CANCEL") { dialog, _ -> dialog.cancel(); }
         val alert = builder.create();
@@ -110,12 +95,8 @@ object Util {
     fun sendDeviceTokenToServer() {
         FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { result ->
             FirebaseAuth.getInstance().currentUser?.apply {
-                val token = result.token
-                val ref = FirebaseFirestore.getInstance()
-                    .collection(FCM_TOKENS).document(token)
-                val userData = HashMap<String, Any>()
-                userData[UID] = uid
-                ref.set(userData)
+                FirebaseFirestore.getInstance().collection(FCM_TOKENS).document(result.token)
+                    .set(mapOf(UID to uid))
             }
         }
     }
@@ -143,10 +124,10 @@ object Util {
                 LOCATION to hashMapOf(LATITUDE to 40.455, LONGITUDE to -74.35)
             ),
             hashMapOf(
-                NAME to "Droid",
+                NAME to "AnDroid",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-r_wtGPpwhGo/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3reJ6DA346tlC_Kv3OLbE_qdmt9r6Q.CMID/s64-c-mo/photo.jpg",
                 LOCATION to hashMapOf(LATITUDE to 40.774, LONGITUDE to -73.461)
-            ) ,
+            ),
             hashMapOf(
                 NAME to "Ionel",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-FzX2I30Hhkw/AAAAAAAAAAI/AAAAAAAAFHY/ACHi3rc8vTf6ZzuNErb0cr5Ir9fem8AuvA.CMID/s64-c-mo/photo.jpg",
@@ -163,6 +144,28 @@ object Util {
             ref.delete()
         }
     }
+
+
+    fun deleteDB(text: String): Task<String>? {
+        if (!BuildConfig.DEBUG) return null
+        // Create the arguments to the callable function.
+        val data = hashMapOf(
+            "text" to text,
+            "push" to true
+        )
+        val functions = FirebaseFunctions.getInstance()
+        return functions
+            .getHttpsCallable("deleteDB")
+            .call(data)
+            .continueWith { task ->
+                // This continuation runs on either success or failure, but if the task
+                // has failed then result will throw an Exception which will be
+                // propagated down.
+                val result = task.result?.data as? String
+                result
+            }
+    }
+
 
 }
 
