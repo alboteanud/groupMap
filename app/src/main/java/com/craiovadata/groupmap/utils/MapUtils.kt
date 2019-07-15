@@ -21,6 +21,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.*
+import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.QueryDocumentSnapshot
 import java.lang.IllegalStateException
 
@@ -89,14 +90,9 @@ object MapUtils {
         }
     }
 
-    fun handleMyLocation(activity: Activity, map: GoogleMap?) {
-
-    }
-
     fun setMarker(
         context: Context,
         document: QueryDocumentSnapshot,
-        mask: Boolean,
         mMarkers: HashMap<String, Marker?>,
         mMap: GoogleMap?
     ) {
@@ -106,19 +102,14 @@ object MapUtils {
         // boundaries required to show them all on the map at once
         val key = document.id
 
-        val locationData = (document.data[LOCATION] as? HashMap<String, Any?>) ?: return
-        val lat = locationData[LATITUDE] as? Double
-        val lng = locationData[LONGITUDE] as? Double
-        if (lat == null || lng == null) return
-        val location = LatLng(lat, lng)
+        val geoPoint = (document.data[LOCATION] as? GeoPoint) ?: return
+        val location = LatLng(geoPoint.latitude, geoPoint.longitude)
         if (!mMarkers.containsKey(key)) {
-            var userName = document.data[NAME] as String
-            var iconUrl = document.data[PHOTO_URL]?.toString()
-            if (mask) {
-                userName = "?"
-                iconUrl = null
-            }
-            val marker = mMap?.addMarker(MarkerOptions().title(userName).position(location))
+            val userName = document.data[NAME] as? String ?: "?"
+            val iconUrl = document.data[PHOTO_URL]?.toString()
+            val marker = mMap?.addMarker(MarkerOptions()
+                .title(userName)
+                .position(location))
 
             setMarkerIcon(context, marker, iconUrl)
             mMarkers[key] = marker

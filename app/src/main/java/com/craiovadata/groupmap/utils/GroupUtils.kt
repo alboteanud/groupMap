@@ -1,38 +1,40 @@
 package com.craiovadata.groupmap.utils
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import android.view.View
 import android.widget.Toast
-import androidx.core.view.accessibility.AccessibilityEventCompat.setAction
+import android.widget.Toast.LENGTH_SHORT
 import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
 import com.android.installreferrer.api.ReferrerDetails
-import com.craiovadata.groupmap.BuildConfig
 import com.craiovadata.groupmap.R
-import com.google.android.gms.common.api.Batch
-import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
-import kotlinx.android.synthetic.main.content_map.*
 
 object GroupUtils {
 
-    fun joinGroup(groupId: String, groupName: String, listener: () -> Unit) {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        val ref = FirebaseFirestore.getInstance()
-            .document("$USERS/$uid/$GROUPS/$groupId")
-        ref.set(hashMapOf(JOINED to true, GROUP_NAME to groupName))
-            .addOnSuccessListener { listener.invoke() }
+    fun joinGroup(uid: String, groupId: String, groupName: String?, listener: (userRole: Int?) -> Unit) {
+        FirebaseFirestore.getInstance().document("$USERS/$uid/$GROUPS/$groupId")
+            .set(mapOf(GROUP_NAME to groupName)) // will trigger a cloud function(3) to update the Group with userData
+            .addOnSuccessListener {
+                Log.d("tag", "Transaction success!")
+                listener.invoke(ROLE_USER)
+            }
+            .addOnFailureListener { e ->
+                Log.w("tag", "Transaction failure.", e)
+                listener.invoke(null)
+            }
     }
 
-    fun startActionShare(context: Context, groupShareKey: String?) {
-        if (groupShareKey == null) return
+    fun startActionShare(context: Context, groupData: Map<String, Any?>?) {
+        val shareKey = groupData?.get(GROUP_SHARE_KEY) as? String
+        if (shareKey == null) {
+            Toast.makeText(context, "error building invitation", LENGTH_SHORT).show()
+            return
+        }
         val baseUrl = context.getString(R.string.base_share_url)
-        val myUrl = baseUrl + groupShareKey
+        val myUrl = baseUrl + shareKey
         val sendIntent: Intent = Intent().apply {
             action = Intent.ACTION_SEND
             putExtra(Intent.EXTRA_TEXT, "invitation to group: $myUrl")
@@ -42,29 +44,13 @@ object GroupUtils {
     }
 
     fun populateDefaultGroup() {
-        if (!BuildConfig.DEBUG) return
-        Log.d("Util", "start populate default group")
         val db = FirebaseFirestore.getInstance()
+        val refGroup = db.document("$GROUPS/$DEFAULT_GROUP")
         val batch = db.batch()
-        batch.set(db.collection(GROUPS).document(DEFAULT_GROUP), hashMapOf(GROUP_NAME to "The New Yorkers"))
+        batch.set(refGroup, mapOf(GROUP_NAME to "New Yorkers"))
         val persons = Util.getDummyUsers()
         persons.forEachIndexed { index, person ->
-            val ref = db.collection(GROUPS).document(DEFAULT_GROUP).collection(DEVICES).document(index.toString())
-            batch.set(ref, person)
-        }
-        batch.commit()
-    }
-
- fun deleteAllDB() {
-        if (!BuildConfig.DEBUG) return
-        Log.d("Util", "start delete all db")
-        val db = FirebaseFirestore.getInstance()
-        val batch = db.batch()
-        batch.set(db.collection(GROUPS).document(DEFAULT_GROUP), hashMapOf(GROUP_NAME to "The New Yorkers"))
-
-        val persons = Util.getDummyUsers()
-        persons.forEachIndexed { index, person ->
-            val ref = db.collection(GROUPS).document(DEFAULT_GROUP).collection(DEVICES).document(index.toString())
+            val ref = refGroup.collection(USERS).document(index.toString())
             batch.set(ref, person)
         }
         batch.commit()

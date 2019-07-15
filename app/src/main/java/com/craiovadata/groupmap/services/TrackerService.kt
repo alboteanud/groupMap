@@ -16,9 +16,16 @@ import androidx.core.app.NotificationCompat
 import com.craiovadata.groupmap.R
 import com.craiovadata.groupmap.utils.*
 import com.craiovadata.groupmap.utils.MapUtils.requestMyGpsLocation
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.iid.FirebaseInstanceId
+import com.google.firestore.v1.DocumentTransform
+import java.sql.Timestamp
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 class TrackerService : Service() {
@@ -30,31 +37,34 @@ class TrackerService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent != null && intent.hasExtra(GROUP_ID)) {
-            val groupId = intent.getStringExtra(GROUP_ID)
-            buildNotification()
-            // get registration token
-            FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
-                requestMyGpsLocation(this) { location ->
-                    updateDB(location, groupId, it.token)
-                    stopForeground(true)
-                    stopSelf()
-                }
-            }
+        val groupId = intent?.getStringExtra(GROUP_ID) ?: return super.onStartCommand(intent, flags, startId)
+        buildNotification()
+        requestMyGpsLocation(this) { location ->
+            updateDB(location, groupId)
+            stopForeground(true)
+            stopSelf()
         }
-
         return super.onStartCommand(intent, flags, startId)
     }
 
-    private fun updateDB(location: Location, groupId: String, token: String) {
-        val data = hashMapOf(
-            LATITUDE to location.latitude,
-            LONGITUDE to location.longitude
-        )
-        val locationData = hashMapOf(LOCATION to data)
-        val db = FirebaseFirestore.getInstance()
-        db.document("$GROUPS/$groupId/$DEVICES/$token")
-            .set(locationData, SetOptions.merge())
+    private fun updateDB(location: Location, groupId: String) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val point = GeoPoint(location.latitude, location.longitude)
+
+        FirebaseFirestore.getInstance().document("$GROUPS/$groupId/$USERS/$uid")
+            .set(
+                mapOf(
+                    LOCATION to point,
+                    "locationTimestamp" to com.google.firebase.Timestamp.now()
+                ), SetOptions.merge()
+            )
+            .addOnFailureListener {
+                Log.e("tag", "failed updating position: " + it.message)
+            }
+            .addOnSuccessListener {
+                Log.d("tag", "onComplete updated position ")
+            }
+
     }
 
     private fun buildNotification() {
@@ -67,7 +77,8 @@ class TrackerService : Service() {
                 NotificationManager.IMPORTANCE_DEFAULT
             )
 
-            (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
+            (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+                .createNotificationChannel(channel)
         }
 
         val stop = "stop"
@@ -75,16 +86,16 @@ class TrackerService : Service() {
         val broadcastIntent = PendingIntent.getBroadcast(
             this, 0, Intent(stop), PendingIntent.FLAG_UPDATE_CURRENT
         )
+        val time = SimpleDateFormat("hh:mm").format(Calendar.getInstance().getTime())
+        val notifTxt = "update request at $time"
         // Create the persistent notification
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(getString(R.string.app_name))
-            .setContentText(getString(R.string.notification_text))
+            .setContentText(notifTxt)
 //            .setOngoing(true)
             .setContentIntent(broadcastIntent)
             .setSmallIcon(R.drawable.ic_tracker);
         startForeground(1, builder.build())
-
-
     }
 
     private var stopReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -100,8 +111,6 @@ class TrackerService : Service() {
         super.onDestroy()
         unregisterReceiver(stopReceiver)
     }
-
-
 
 
 }

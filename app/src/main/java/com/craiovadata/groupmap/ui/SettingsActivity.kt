@@ -1,10 +1,10 @@
 package com.craiovadata.groupmap.ui
 
+import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import com.craiovadata.groupmap.R
 
 private const val TITLE_TAG = "settingsActivityTitle"
 
@@ -13,18 +13,18 @@ class SettingsActivity : AppCompatActivity(),
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.settings_activity)
+        setContentView(com.craiovadata.groupmap.R.layout.settings_activity)
         if (savedInstanceState == null) {
             supportFragmentManager
                 .beginTransaction()
-                .replace(R.id.settings, HeaderFragment())
+                .replace(com.craiovadata.groupmap.R.id.settings, HeaderFragment())
                 .commit()
         } else {
             title = savedInstanceState.getCharSequence(TITLE_TAG)
         }
         supportFragmentManager.addOnBackStackChangedListener {
             if (supportFragmentManager.backStackEntryCount == 0) {
-                setTitle(R.string.title_activity_settings)
+                setTitle(com.craiovadata.groupmap.R.string.title_activity_settings)
             }
         }
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -59,7 +59,7 @@ class SettingsActivity : AppCompatActivity(),
         }
         // Replace the existing Fragment with the new Fragment
         supportFragmentManager.beginTransaction()
-            .replace(R.id.settings, fragment)
+            .replace(com.craiovadata.groupmap.R.id.settings, fragment)
             .addToBackStack(null)
             .commit()
         title = pref.title
@@ -68,19 +68,42 @@ class SettingsActivity : AppCompatActivity(),
 
     class HeaderFragment : PreferenceFragmentCompat() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-            setPreferencesFromResource(R.xml.header_preferences, rootKey)
+            setPreferencesFromResource(com.craiovadata.groupmap.R.xml.header_preferences, rootKey)
         }
     }
 
-    class MessagesFragment : PreferenceFragmentCompat() {
-        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-            setPreferencesFromResource(R.xml.messages_preferences, rootKey)
+    class AccountFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedPreferenceChangeListener {
+
+        override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+            if (key.equals("some_key")) {
+                // Set summary to be the user-description for the selected value
+//                val exercisesPref = findPreference<Preference>(key)
+//                exercisesPref!!.summary = sharedPreferences.getString(key, "")
+            }
         }
+
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+            setPreferencesFromResource(com.craiovadata.groupmap.R.xml.account_preferences, rootKey)
+        }
+
+        override fun onResume() {
+            super.onResume()
+            // Set up a listener whenever a key changes
+            preferenceScreen.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
+        }
+
+        override fun onPause() {
+            super.onPause()
+            // Set up a listener whenever a key changes
+            preferenceScreen.sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
+        }
+
+
     }
 
-    class SyncFragment : PreferenceFragmentCompat() {
+    class InviteFragment : PreferenceFragmentCompat(){
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-            setPreferencesFromResource(R.xml.sync_preferences, rootKey)
+            setPreferencesFromResource(com.craiovadata.groupmap.R.xml.invite_preferences, rootKey)
         }
     }
 }

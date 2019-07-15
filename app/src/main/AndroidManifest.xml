@@ -20,7 +20,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".ui.BaseActivity"></activity>
         <activity
             android:name=".ui.MyGroupsActivity"
             android:label="@string/title_activity_my_groups"
@@ -38,9 +37,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.craiovadata.groupmap.ui.MapActivity" />
         </activity>
-        <activity
-            android:name=".ui.PrivacyActivity"
-            android:parentActivityName=".ui.MapActivity" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
@@ -103,7 +99,7 @@
             android:name=".services.TrackerService"
             android:enabled="true" />
         <service
-            android:name=".services.MyFirebaseMessagingService"
+            android:name=".services.MyMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

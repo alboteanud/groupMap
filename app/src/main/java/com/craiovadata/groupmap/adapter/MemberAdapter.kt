@@ -7,10 +7,7 @@ import android.view.View.VISIBLE
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.craiovadata.groupmap.R
-import com.craiovadata.groupmap.utils.GlideApp
-import com.craiovadata.groupmap.utils.IS_ADMIN
-import com.craiovadata.groupmap.utils.NAME
-import com.craiovadata.groupmap.utils.PHOTO_URL
+import com.craiovadata.groupmap.utils.*
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.Query
 import kotlinx.android.synthetic.main.item_member.view.*
@@ -18,7 +15,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 open class MemberAdapter(query: Query, private val listener: OnItemSelectedListener) :
-        FirestoreAdapter<MemberAdapter.ViewHolder>(query) {
+    FirestoreAdapter<MemberAdapter.ViewHolder>(query) {
 
     interface OnItemSelectedListener {
         fun onItemSelected(member: DocumentSnapshot)
@@ -54,11 +51,11 @@ open class MemberAdapter(query: Query, private val listener: OnItemSelectedListe
                 itemView.memberName.text = it as String
             }
 
-            val isAdmin = member[IS_ADMIN] as? Boolean ?: false
-            if (isAdmin){
+            val role = member[ROLE] as? Int ?: 0
+            if (role == ROLE_ADMIN) {
                 itemView.isAdminText.visibility = VISIBLE
                 itemView.isAdminText.text = "Group admin"
-            } else{
+            } else {
                 itemView.isAdminText.visibility = GONE
             }
 

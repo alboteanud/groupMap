@@ -48,7 +48,7 @@ open class GroupAdapter(query: Query, private val listener: OnItemSelectedListen
                 itemView.groupPhoto.contentDescription =
                     String.format(itemView.context.getString(R.string.description_person_icon), it as String)
 
-                itemView.groupName.text = it as String
+                itemView.groupNameTextView.text = it as String
             }
 
             itemView.setOnClickListener {

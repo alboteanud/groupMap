@@ -5,10 +5,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.craiovadata.groupmap.adapter.GroupAdapter
-import com.craiovadata.groupmap.utils.GROUPS
-import com.craiovadata.groupmap.utils.GROUP_ID
-import com.craiovadata.groupmap.utils.JOINED
-import com.craiovadata.groupmap.utils.USERS
+import com.craiovadata.groupmap.utils.*
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
@@ -49,9 +46,8 @@ class MyGroupsActivity : AppCompatActivity(), GroupAdapter.OnItemSelectedListene
         val currentUser = FirebaseAuth.getInstance().currentUser ?: return
         val uid = currentUser.uid
         val db = FirebaseFirestore.getInstance()
-        val query = db.collection("$USERS/$uid/$GROUPS")
-            .whereEqualTo(JOINED, true).limit(100)
-
+        val query = db.collection("$USER_GROUPS/$uid/$GROUPS")
+            .whereEqualTo(ROLE, ROLE_USER ).limit(100)
 
         adapter = object: GroupAdapter(query, this@MyGroupsActivity){
 

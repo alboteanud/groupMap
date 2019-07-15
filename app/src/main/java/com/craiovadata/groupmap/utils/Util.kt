@@ -7,7 +7,7 @@ import android.net.Uri
 import android.provider.Settings
 import android.util.Log
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
+import androidx.preference.PreferenceManager
 import com.craiovadata.groupmap.BuildConfig
 import com.craiovadata.groupmap.R
 import com.firebase.ui.auth.AuthUI
@@ -16,6 +16,7 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.iid.FirebaseInstanceId
 import java.io.Serializable
@@ -47,7 +48,7 @@ object Util {
         return true
     }
 
-    fun startLoginActivity(activity: Activity) {
+    fun startLoginActivity(activity: Activity, requestCode: Int) {
         val providers =
             arrayListOf(AuthUI.IdpConfig.EmailBuilder().build(), AuthUI.IdpConfig.GoogleBuilder().build())
         activity.startActivityForResult(
@@ -57,7 +58,8 @@ object Util {
                 .setIsSmartLockEnabled(true)
                 .setLogo(R.drawable.ic_person_pin)
 //                        .setAlwaysShowSignInMethodScreen(true)
-                .build(), RC_SIGN_IN
+//                .build(), RC_SIGN_IN
+                .build(), requestCode
         )
     }
 
@@ -92,12 +94,11 @@ object Util {
             .build()
     }
 
-    fun sendDeviceTokenToServer() {
+    fun sendTokenToServer() {
         FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { result ->
-            FirebaseAuth.getInstance().currentUser?.apply {
-                FirebaseFirestore.getInstance().collection(FCM_TOKENS).document(result.token)
-                    .set(mapOf(UID to uid))
-            }
+            val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@addOnSuccessListener
+            FirebaseFirestore.getInstance().document("$USERS/$uid")
+                .set(mapOf(TOKEN to result.token), SetOptions.merge()) // PAUSE can be there
         }
     }
 
@@ -106,50 +107,46 @@ object Util {
             hashMapOf(
                 NAME to "Dan",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-JwqhJ989hXw/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3rdvLnxofP2V96sjhxQ0lXf2HrRgKg.CMID/s64-c-mo/photo.jpg",
-                LOCATION to hashMapOf(LATITUDE to 40.6608, LONGITUDE to -73.949)
+                LOCATION to hashMapOf(LATITUDE to 40.6608, LONGITUDE to -73.949),
+                VISIBILITY to "public"
             ),
             hashMapOf(
                 NAME to "Anca",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-dFfcBHiIoTk/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3rd8xLcopVHADHFqH_8wDBHo5nd6IQ/s64-c-mo/photo.jpg",
                 LOCATION to hashMapOf(LATITUDE to 40.596, LONGITUDE to -74.143)
+                , VISIBILITY to "public"
             ),
             hashMapOf(
                 NAME to "Mihaela",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-o3phkZogqYY/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3reUul-g6ccRH73tgTbvAVUVAU5igQ.CMID/s64-c-mo/photo.jpg",
                 LOCATION to hashMapOf(LATITUDE to 40.828, LONGITUDE to -74.067)
+                , VISIBILITY to "public"
             ),
             hashMapOf(
                 NAME to "Victoria",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-aKPXx00bFf4/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3rfH3oBxY63PQ_FrT48c9yX2wf-U9A.CMID/s64-c-mo/photo.jpg",
                 LOCATION to hashMapOf(LATITUDE to 40.455, LONGITUDE to -74.35)
+                , VISIBILITY to "public"
             ),
             hashMapOf(
                 NAME to "AnDroid",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-r_wtGPpwhGo/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3reJ6DA346tlC_Kv3OLbE_qdmt9r6Q.CMID/s64-c-mo/photo.jpg",
                 LOCATION to hashMapOf(LATITUDE to 40.774, LONGITUDE to -73.461)
+                , VISIBILITY to "public"
             ),
             hashMapOf(
                 NAME to "Ionel",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-FzX2I30Hhkw/AAAAAAAAAAI/AAAAAAAAFHY/ACHi3rc8vTf6ZzuNErb0cr5Ir9fem8AuvA.CMID/s64-c-mo/photo.jpg",
                 LOCATION to hashMapOf(LATITUDE to 40.614, LONGITUDE to -73.5)
+                , VISIBILITY to "public"
             )
         )
     }
 
-    fun deleteMessagingDeviceToken() {
-        FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { result ->
-            val token = result.token
-            val db = FirebaseFirestore.getInstance()
-            val ref = db.collection(FCM_TOKENS).document(token)
-            ref.delete()
-        }
-    }
-
 
     fun deleteDB(text: String): Task<String>? {
-        if (!BuildConfig.DEBUG) return null
         // Create the arguments to the callable function.
-        val data = hashMapOf(
+        val data = mapOf(
             "text" to text,
             "push" to true
         )
@@ -164,6 +161,15 @@ object Util {
                 val result = task.result?.data as? String
                 result
             }
+    }
+
+
+    private fun saveUserDataToPrefs(context: Context, data: Map<String, Any>) {
+        val userName = data[NAME] as? String ?: return
+        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+        val savedName = prefs.getString("pref_key_user_name", null)
+        if (userName != savedName)
+            prefs.edit().putString("pref_key_user_name", userName).apply()
     }
 
 

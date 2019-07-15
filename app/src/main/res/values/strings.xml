@@ -10,10 +10,7 @@
     <string name="action_find_group">Find group</string>
 
     <string name="label_group_name">Group name</string>
-    <string name="label_group_password">Password</string>
-    <string name="labelGroupPassword">Group password</string>
     <string name="buttonTextCreateGroup">Create group</string>
-    <string name="buttonTextLoginToCreateGroup">Login to create group</string>
     <string name="notification_text">Tracking, tap to cancel</string>
     <string name="transport_id" translatable="false">125</string>
     <string name="firebase_path" translatable="false">locations</string>
@@ -28,12 +25,13 @@
     <string name="title_activity_settings">Settings</string>
 
     <!-- Preference Titles -->
-    <string name="messages_header">Messages</string>
-    <string name="sync_header">Sync</string>
+    <string name="account_header">Account</string>
+    <string name="invite_header">Invite a friend</string>
 
     <!-- Messages Preferences -->
-    <string name="signature_title">Your signature</string>
+    <string name="name_pref_title">Your name</string>
     <string name="reply_title">Default reply action</string>
+    <string name="pref_key_user_name">pref_key_user_name</string>
 
     <!-- Sync Preferences -->
     <string name="sync_title">Sync email periodically</string>
