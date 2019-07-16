@@ -16,10 +16,12 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.iid.FirebaseInstanceId
 import java.io.Serializable
+import java.util.HashMap
 
 
 object Util {
@@ -73,7 +75,7 @@ object Util {
         alert.show();
     }
 
-    fun buildAlertExitGroup(context: Context, groupId: String, groupName: String, callback: () -> Unit) {
+    fun buildAlertExitGroup(context: Context, groupName: String, callback: () -> Unit) {
         val builder = AlertDialog.Builder(context);
         builder.setMessage("Exit \"$groupName\" group?")
             .setCancelable(false)
@@ -102,42 +104,42 @@ object Util {
         }
     }
 
-    fun getDummyUsers(): Array<HashMap<String, Serializable>> {
+    fun getDummyUsers(): Array<HashMap<String, out Any>> {
         return arrayOf(
             hashMapOf(
                 NAME to "Dan",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-JwqhJ989hXw/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3rdvLnxofP2V96sjhxQ0lXf2HrRgKg.CMID/s64-c-mo/photo.jpg",
-                LOCATION to hashMapOf(LATITUDE to 40.6608, LONGITUDE to -73.949),
+                LOCATION to GeoPoint(40.66,  -73.949),
                 VISIBILITY to "public"
             ),
             hashMapOf(
                 NAME to "Anca",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-dFfcBHiIoTk/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3rd8xLcopVHADHFqH_8wDBHo5nd6IQ/s64-c-mo/photo.jpg",
-                LOCATION to hashMapOf(LATITUDE to 40.596, LONGITUDE to -74.143)
+                LOCATION to GeoPoint(40.6, -74.14)
                 , VISIBILITY to "public"
             ),
             hashMapOf(
                 NAME to "Mihaela",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-o3phkZogqYY/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3reUul-g6ccRH73tgTbvAVUVAU5igQ.CMID/s64-c-mo/photo.jpg",
-                LOCATION to hashMapOf(LATITUDE to 40.828, LONGITUDE to -74.067)
+                LOCATION to GeoPoint( 40.828, -74.067)
                 , VISIBILITY to "public"
             ),
             hashMapOf(
                 NAME to "Victoria",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-aKPXx00bFf4/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3rfH3oBxY63PQ_FrT48c9yX2wf-U9A.CMID/s64-c-mo/photo.jpg",
-                LOCATION to hashMapOf(LATITUDE to 40.455, LONGITUDE to -74.35)
+                LOCATION to GeoPoint(40.455,  -74.35)
                 , VISIBILITY to "public"
             ),
             hashMapOf(
                 NAME to "AnDroid",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-r_wtGPpwhGo/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3reJ6DA346tlC_Kv3OLbE_qdmt9r6Q.CMID/s64-c-mo/photo.jpg",
-                LOCATION to hashMapOf(LATITUDE to 40.774, LONGITUDE to -73.461)
+                LOCATION to GeoPoint(40.774, -73.461)
                 , VISIBILITY to "public"
             ),
             hashMapOf(
                 NAME to "Ionel",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-FzX2I30Hhkw/AAAAAAAAAAI/AAAAAAAAFHY/ACHi3rc8vTf6ZzuNErb0cr5Ir9fem8AuvA.CMID/s64-c-mo/photo.jpg",
-                LOCATION to hashMapOf(LATITUDE to 40.614, LONGITUDE to -73.5)
+                LOCATION to GeoPoint( 40.614,  -73.5)
                 , VISIBILITY to "public"
             )
         )

@@ -2,7 +2,7 @@
     <string name="app_name">Map</string>
 
     <string name="title_activity_maps">Group map</string>
-    <string name="title_activity_group_info">GroupInfoActivity</string>
+    <string name="title_activity_group_info">Group info</string>
     <string name="title_activity_create_group">New group</string>
 
     <string name="action_settings">Settings</string>

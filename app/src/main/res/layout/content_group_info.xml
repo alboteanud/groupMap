@@ -9,13 +9,41 @@
     tools:showIn="@layout/activity_group_info">
 
     <TextView
+        android:id="@+id/infoGroupName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:maxWidth="240dp"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Group name" />
+
+    <ImageView
+        android:id="@+id/infoButtonEditGroupName"
+        style="@style/Widget.AppCompat.ActionButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:src="@drawable/ic_edit"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="@+id/infoGroupName"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/infoGroupName"
+        tools:visibility="visible" />
+
+    <TextView
         android:id="@+id/participantsText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/recyclerParticipants"
+        android:layout_marginTop="8dp"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/infoGroupName"
         tools:text="10 participants" />
 
     <Button
@@ -24,7 +52,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
         android:layout_marginEnd="8dp"
-        android:text="@string/btn_text_send_invitation"
+        android:layout_marginBottom="8dp"
+        android:text="invite"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -33,8 +63,10 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
+        android:visibility="gone"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintTop_toBottomOf="@+id/button_share_group"
-        tools:listitem="@layout/item_member" />
+        app:layout_constraintTop_toBottomOf="@+id/participantsText"
+        tools:listitem="@layout/item_member"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

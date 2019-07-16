@@ -3,13 +3,10 @@ package com.craiovadata.groupmap.ui
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import androidx.core.app.ActivityCompat.startActivityForResult
-import androidx.core.content.ContextCompat.startActivity
 import com.craiovadata.groupmap.R
 import com.craiovadata.groupmap.utils.*
 import com.craiovadata.groupmap.utils.GroupUtils.getShareKeyFromInstallRefferer
@@ -23,7 +20,6 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.Marker
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.*
 import com.google.firebase.firestore.FieldValue.serverTimestamp
 import kotlinx.android.synthetic.main.activity_map.*
@@ -39,40 +35,39 @@ class MapActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_map)
         setSupportActionBar(toolbar)
-        groupId = getSharedPreferences("_", MODE_PRIVATE).getString(GROUP_ID, NO_GROUP) ?: NO_GROUP
+        init()
         initMap()
     }
 
-    fun onFabClicked(view: View) {
-                    zoomOnMe(this, map)
-//        GroupUtils.populateDefaultGroup()
-    }
-
-    private fun initMap() {
-        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync { map ->
-            this.map = map
-            this.map?.setMaxZoomPreference(16f)
-            initGroupConnection()
+    fun init(groupShareKey: String? = null) {
+        if (groupShareKey != null) {
+            getGroupData(groupShareKey) {
+                checkMemberRole()
+                requestPositionUpdatesFromOthers()
+            }
+        } else {
+            getGroupShareKey { shareKey ->
+                getGroupData(shareKey) {
+                    checkMemberRole()
+                    requestPositionUpdatesFromOthers()
+                }
+            }
         }
     }
 
-    private fun initGroupConnection() {
-        if (groupId == NO_GROUP) {  // first start
+    private fun getGroupShareKey(callback: (groupShareKey: String?) -> Unit) {
+        groupId = getSharedPreferences("_", MODE_PRIVATE).getString(GROUP_ID, null)
+        if (groupId == null) {  // first start
             groupId = DEFAULT_GROUP
-            saveGroupIdToPref(groupId)
-            getShareKeyFromInstallRefferer(this) { groupShareKey ->
-                val finalGroupShareKey = groupShareKey
-                    ?: tryGetShareKeyFromAppLinkIntent() // maybe prefs deleted
-                getGroupData(finalGroupShareKey) {
-                    checkMemberRole()
-                }
+            saveGroupIdToPref(DEFAULT_GROUP)
+            getShareKeyFromInstallRefferer(this) { groupShareKeyFromRefferer ->
+                val groupShareKey = groupShareKeyFromRefferer
+                    ?: getShareKeyFromAppLinkIntent() // maybe prefs deleted
+                callback.invoke(groupShareKey)
             }
         } else {
-            val groupShareKey = tryGetShareKeyFromAppLinkIntent()
-            getGroupData(groupShareKey) {
-                checkMemberRole()
-            }
+            val groupShareKey = getShareKeyFromAppLinkIntent()
+            callback.invoke(groupShareKey)
         }
     }
 
@@ -86,7 +81,7 @@ class MapActivity : BaseActivity() {
                     saveGroupIdToPref(groupId)
                     listener.invoke()
                 }
-        } else {      // check  saved groupId
+        } else {      // use saved groupId
             db.document("$GROUPS/$groupId").get()
                 .addOnSuccessListener { snap ->
                     groupData = snap.data
@@ -96,26 +91,34 @@ class MapActivity : BaseActivity() {
     }
 
     private fun checkMemberRole() {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return updateUI()
+        if (groupId == DEFAULT_GROUP) {
+            memberRole = ROLE_USER
+            updateUI()
+            setPositionsListener()
+            return
+        }
+        val uid = currentUser?.uid ?: return
         db.document("$GROUPS/$groupId/$USERS/$uid").get()
             .addOnSuccessListener { snap ->
                 userData = snap.data
                 memberRole = (userData?.get(ROLE) as? Long)?.toInt() ?: ROLE_USER
                 updateUI()
+                inviteToGroupIfNeeded()
+                setPositionsListener()
             }
     }
 
     private fun updateUI() {
         val groupName = groupData?.get(GROUP_NAME) as? String
-        title = groupName ?: title
+        title = groupName ?: getString(R.string.app_name)
         invalidateOptionsMenu()
-        inviteToGroupIfNeeded()
-        setPositionsListener()
-        requestPositionUpdatesFromOthers()
     }
 
     private fun inviteToGroupIfNeeded() {
-        if (memberRole == ROLE_USER || memberRole == ROLE_ADMIN || groupId == DEFAULT_GROUP) return
+        if (memberRole == ROLE_USER || memberRole == ROLE_ADMIN
+            || groupId == DEFAULT_GROUP || groupId == null
+        )
+            return
         val groupName = groupData?.get(GROUP_NAME) as? String ?: ""
         val text = "Join \"$groupName\" group?"
         val snack = Snackbar.make(content_main, text, Snackbar.LENGTH_INDEFINITE)
@@ -127,7 +130,6 @@ class MapActivity : BaseActivity() {
 
     private fun handleJoinAsked(shouldStartLoginActivity: Boolean = false) {
         if (memberRole == ROLE_USER || memberRole == ROLE_ADMIN) return
-        val currentUser = FirebaseAuth.getInstance().currentUser
         if (currentUser == null) {
             if (shouldStartLoginActivity)
                 startLoginActivity(this, RC_SIGN_IN_ASKED_JOIN)
@@ -135,7 +137,7 @@ class MapActivity : BaseActivity() {
         }
 
         val groupName = groupData?.get(GROUP_NAME) as? String
-        joinGroup(currentUser.uid, groupId, groupName) { userRole ->
+        joinGroup(currentUser!!.uid, groupId, groupName) { userRole ->
             if (userRole != null) {
                 Snackbar.make(content_main, "You joined", Snackbar.LENGTH_LONG).show()
                 memberRole = userRole
@@ -148,8 +150,9 @@ class MapActivity : BaseActivity() {
     }
 
     private fun requestPositionUpdatesFromOthers() {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        if (memberRole != ROLE_USER && memberRole != ROLE_ADMIN) return
+        if (memberRole != ROLE_USER && memberRole != ROLE_ADMIN)  // not member, not continue
+            return
+        val uid = currentUser?.uid ?: return
         db.document("$REQUESTS/$groupId")
             .set(mapOf(UID to uid, TIMESTAMP to serverTimestamp()))
             .addOnSuccessListener {
@@ -164,20 +167,34 @@ class MapActivity : BaseActivity() {
         super.onActivityResultOk(requestCode)
         when (requestCode) {
             RC_SIGN_IN_ASKED_JOIN -> handleJoinAsked(false)
-            RC_SIGN_IN -> initGroupConnection()
-            RC_CREATE_GROUP -> { // a group was just created
-                getGroupData(null) {
-                    checkMemberRole()
-                    Snackbar.make(content_main, "Group created. Invite participants?", Snackbar.LENGTH_INDEFINITE)
-                        .setAction("Ok") { startActionShare(this, groupData) }
+            RC_SIGN_IN -> {
+                if (groupId != DEFAULT_GROUP ) {
+                    reset()
+                    init()
                 }
+                updateUI()
+            }
+            RC_CREATE_GROUP -> { // a group was just created
+                // groupId was set in BaseActivity
+                reset()
+                init()
+                Snackbar.make(content_main, "Group created. Invite participants?", Snackbar.LENGTH_INDEFINITE)
+                    .setAction("Ok") { startActionShare(this, groupData) }
             }
         }
     }
 
+    fun reset() {
+        map?.clear()
+        positionListenerRegistration?.remove()
+        groupData = null
+        memberRole = null
+    }
+
     override fun onStart() {
         super.onStart()
-//        setPositionsListener() // error map not ready
+        requestPositionUpdatesFromOthers()
+        setPositionsListener()
     }
 
     override fun onStop() {
@@ -186,12 +203,11 @@ class MapActivity : BaseActivity() {
     }
 
     private fun setPositionsListener() {
-        if (groupId != DEFAULT_GROUP) {
-            if (memberRole != ROLE_USER || memberRole != ROLE_ADMIN) return
-        }
+        if (map == null) return
+        if (memberRole != ROLE_USER && memberRole != ROLE_ADMIN) return // return if not member
 
         positionListenerRegistration?.remove()
-        map?.clear()
+//        map?.clear()
         positionListenerRegistration = db.collection("$GROUPS/$groupId/$USERS")
             .addSnapshotListener(EventListener<QuerySnapshot> { snapshots, e ->
                 if (e != null) {
@@ -200,12 +216,13 @@ class MapActivity : BaseActivity() {
                 }
                 if (snapshots == null) return@EventListener
                 for (dc in snapshots.documentChanges) {
+                    val userDataDoc = dc.document
                     when (dc.type) {
-                        DocumentChange.Type.ADDED -> setMarker(applicationContext, dc.document, markers, map)
-                        DocumentChange.Type.MODIFIED -> setMarker(applicationContext, dc.document, markers, map)
+                        DocumentChange.Type.ADDED -> setMarker(applicationContext, userDataDoc, markers, map)
+                        DocumentChange.Type.MODIFIED -> setMarker(applicationContext, userDataDoc, markers, map)
                         DocumentChange.Type.REMOVED -> {
-                            Log.d(TAG, "Removed doc: ${dc.document.data}")
-                            markers.remove(dc.document.id)
+                            Log.d(TAG, "Removed doc: ${userDataDoc.data}")
+                            markers.remove(userDataDoc.id)
                         }
                     }
                 }
@@ -213,17 +230,15 @@ class MapActivity : BaseActivity() {
     }
 
     private fun exitGroup() {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val uid = currentUser?.uid ?: return
         db.document("$USERS/$uid/$GROUPS/$groupId").delete()
             .addOnSuccessListener {
-                groupId = DEFAULT_GROUP
-                saveGroupIdToPref(groupId)
-                groupData = null
-                Snackbar.make(content_main, "You left the group", Snackbar.LENGTH_SHORT).show()
-                memberRole = null
-                title = getString(R.string.app_name)
-                zoomOnMe(this, map)
+                groupId = null
+                reset()
+                saveGroupIdToPref(null)
                 updateUI()
+                zoomOnMe(this, map)
+                Snackbar.make(content_main, "You left the group", Snackbar.LENGTH_SHORT).show()
             }
     }
 
@@ -242,13 +257,11 @@ class MapActivity : BaseActivity() {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         setIntent(intent)
-        val groupShareKey = tryGetShareKeyFromAppLinkIntent()
-        getGroupData(groupShareKey) {
-            checkMemberRole()
-        }
+        val groupShareKey = getShareKeyFromAppLinkIntent()
+        init(groupShareKey)
     }
 
-    private fun tryGetShareKeyFromAppLinkIntent(): String? {
+    private fun getShareKeyFromAppLinkIntent(): String? {
         val appLinkData = intent.data ?: return null
         val segments = appLinkData.pathSegments
         if (segments.size >= 2) {
@@ -265,12 +278,12 @@ class MapActivity : BaseActivity() {
     }
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        menu?.findItem(R.id.menu_item_group_info)?.isVisible = (memberRole == ROLE_USER || memberRole == ROLE_ADMIN)
-        menu?.findItem(R.id.menu_item_exit)?.isVisible = (memberRole == ROLE_USER || memberRole == ROLE_ADMIN)
+        menu?.findItem(R.id.menu_item_group_info)?.isVisible = groupId != DEFAULT_GROUP && (memberRole == ROLE_USER || memberRole == ROLE_ADMIN)
+        menu?.findItem(R.id.menu_item_exit)?.isVisible =
+            groupId != DEFAULT_GROUP && (memberRole == ROLE_USER || memberRole == ROLE_ADMIN)
         menu?.findItem(R.id.menu_item_join)?.isVisible = memberRole == null
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        menu?.findItem(R.id.menu_item_login)?.isVisible = currentUser == null
-        menu?.findItem(R.id.menu_item_logout)?.isVisible = currentUser != null
+        menu?.findItem(R.id.menu_item_login)?.isVisible = currentUser == null && BuildConfig.DEBUG
+        menu?.findItem(R.id.menu_item_logout)?.isVisible = currentUser != null && BuildConfig.DEBUG
         menu?.findItem(R.id.menu_item_add_members)?.isVisible = memberRole == ROLE_ADMIN
         return super.onPrepareOptionsMenu(menu)
     }
@@ -293,7 +306,7 @@ class MapActivity : BaseActivity() {
             }
             R.id.menu_item_exit -> {
                 val groupName = groupData?.get(GROUP_NAME) as? String ?: "My Group"
-                buildAlertExitGroup(this, groupId, groupName) {
+                buildAlertExitGroup(this, groupName) {
                     exitGroup()
                 }
                 return true
@@ -307,7 +320,12 @@ class MapActivity : BaseActivity() {
                 return true
             }
             R.id.menu_item_logout -> {
-                FirebaseAuth.getInstance().signOut()
+                auth.signOut()
+                currentUser = auth.currentUser
+                if (groupId != DEFAULT_GROUP ) {
+                    reset()
+                    init()
+                }
                 updateUI()
                 return true
             }
@@ -316,6 +334,20 @@ class MapActivity : BaseActivity() {
                 return true
             }
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    fun onFabClicked(view: View) {
+        zoomOnMe(this, map)
+//        GroupUtils.populateDefaultGroup()
+    }
+
+    private fun initMap() {
+        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
+        mapFragment.getMapAsync { map ->
+            map.setMaxZoomPreference(16f)
+            this.map = map
+            setPositionsListener()
         }
     }
 

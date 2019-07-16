@@ -28,7 +28,7 @@ class MyMessagingService : FirebaseMessagingService() {
         }
     }
 
-    private fun shouldUpdate(payload: Map<String, Any>): Boolean {
+    private fun isAllowedTpSendPosition(payload: Map<String, Any>): Boolean {
         val uid = FirebaseAuth.getInstance().currentUser?.uid
         val sentUid = payload[UID] as? String ?: return false
         if (uid == null || sentUid != uid) {
@@ -62,7 +62,7 @@ class MyMessagingService : FirebaseMessagingService() {
     }
 
     private fun startTrackerService(payload: Map<String, Any>) {
-        val shouldUpdate = shouldUpdate(payload)
+        val shouldUpdate = isAllowedTpSendPosition(payload)
         if (!shouldUpdate) return
         val groupId = payload[GROUP_ID] as? String ?: return
         val intent = Intent(this, TrackerService::class.java)

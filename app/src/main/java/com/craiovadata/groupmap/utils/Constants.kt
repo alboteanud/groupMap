@@ -24,6 +24,7 @@ const val TOKEN = "token"
 const val ROLE_EX_USER = -1
 const val ROLE_USER = 1
 const val ROLE_ADMIN = 2
+const val ROLE_VISITER = 0
 const val UPDATE_REQUEST = 1
 
 //const val BASE_URL_SHARE_GROUP = "https://groupmap-6b346.web.app/group/"

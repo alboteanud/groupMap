@@ -14,7 +14,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 object GroupUtils {
 
-    fun joinGroup(uid: String, groupId: String, groupName: String?, listener: (userRole: Int?) -> Unit) {
+    fun joinGroup(uid: String, groupId: String?, groupName: String?, listener: (userRole: Int?) -> Unit) {
+        if (groupId==null) return
         FirebaseFirestore.getInstance().document("$USERS/$uid/$GROUPS/$groupId")
             .set(mapOf(GROUP_NAME to groupName)) // will trigger a cloud function(3) to update the Group with userData
             .addOnSuccessListener {

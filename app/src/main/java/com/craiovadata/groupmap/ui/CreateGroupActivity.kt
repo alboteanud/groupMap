@@ -28,11 +28,16 @@ class CreateGroupActivity : BaseActivity() {
         buttonLogin.setOnClickListener {
             startLoginActivity(this, RC_SIGN_IN)
         }
+
+    }
+
+    override fun onStart() {
+        super.onStart()
         updateUI()
     }
 
     private fun updateUI() {
-        if (FirebaseAuth.getInstance().currentUser == null) {
+        if (currentUser == null) {
             buttonCreateGroup.isEnabled = false
             buttonCreateGroup.alpha = 0.8f
             buttonLogin.visibility = VISIBLE
@@ -50,7 +55,7 @@ class CreateGroupActivity : BaseActivity() {
     }
 
     private fun createGroup(groupName: String) {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val uid = currentUser?.uid ?: return
         groupId = db.collection(GROUPS).document().id
         val shareKey = db.collection(DB_GROUP_SHARE_KEYS).document().id
 
@@ -81,7 +86,7 @@ class CreateGroupActivity : BaseActivity() {
         return groupName
     }
 
-    private fun goToMapActivity(groupId: String) {
+    private fun goToMapActivity(groupId: String?) {
         val resultIntent = Intent(this, GroupInfoActivity::class.java)
         resultIntent.putExtra(GROUP_ID, groupId)
         setResult(RESULT_OK, resultIntent)

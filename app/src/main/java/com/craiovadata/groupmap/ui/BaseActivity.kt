@@ -11,17 +11,22 @@ import com.craiovadata.groupmap.utils.Util.sendTokenToServer
 import com.firebase.ui.auth.ErrorCodes
 import com.firebase.ui.auth.IdpResponse
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.content_map.*
 
 abstract class BaseActivity : AppCompatActivity() {
     lateinit var db: FirebaseFirestore
-    var groupId: String = NO_GROUP
+    var groupId: String? = null
     var memberRole: Int? = null
     var userData: Map<String, Any>? = null
+    lateinit var auth: FirebaseAuth
+    var currentUser: FirebaseUser? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
     }
 
@@ -56,9 +61,17 @@ abstract class BaseActivity : AppCompatActivity() {
 
     }
 
-    fun saveGroupIdToPref(groupId: String) {
+    fun saveGroupIdToPref(groupId: String?) {
         getSharedPreferences("_", MODE_PRIVATE).edit()
             .putString(GROUP_ID, groupId).apply()
+    }
+
+
+    public override fun onStart() {
+        super.onStart()
+        // Check if user is signed in (non-null) and update UI accordingly.
+        currentUser = auth.currentUser
+//        updateUI(currentUser)
     }
 
 
