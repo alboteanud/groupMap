@@ -9,15 +9,17 @@ import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
 import com.android.installreferrer.api.ReferrerDetails
 import com.craiovadata.groupmap.R
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 
 object GroupUtils {
 
-    fun joinGroup(uid: String, groupId: String?, groupName: String?, listener: (userRole: Int?) -> Unit) {
+    fun joinGroup(groupId: String?, groupName: String?, listener: (userRole: Int?) -> Unit) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
         if (groupId==null) return
         FirebaseFirestore.getInstance().document("$USERS/$uid/$GROUPS/$groupId")
-            .set(mapOf(GROUP_NAME to groupName)) // will trigger a cloud function(3) to update the Group with userData
+            .set(mapOf(GROUP_NAME to groupName, ROLE to ROLE_USER)) // will trigger a cloud function(3) to update the Group with userData
             .addOnSuccessListener {
                 Log.d("tag", "Transaction success!")
                 listener.invoke(ROLE_USER)
@@ -57,7 +59,7 @@ object GroupUtils {
         batch.commit()
     }
 
-    fun getShareKeyFromInstallRefferer(context: Context, callback: (groupKey: String?) -> Unit) {
+    fun checkInstallRefferer(context: Context, callback: (groupShareKey: String?) -> Unit) {
         // check if url contains group link code
         val referrerClient = InstallReferrerClient.newBuilder(context).build()
         referrerClient.startConnection(object : InstallReferrerStateListener {

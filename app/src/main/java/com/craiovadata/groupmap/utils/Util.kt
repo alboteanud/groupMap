@@ -20,8 +20,8 @@ import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.iid.FirebaseInstanceId
-import java.io.Serializable
 import java.util.HashMap
+import android.util.DisplayMetrics
 
 
 object Util {
@@ -58,7 +58,7 @@ object Util {
                 .createSignInIntentBuilder()
                 .setAvailableProviders(providers)
                 .setIsSmartLockEnabled(true)
-                .setLogo(R.drawable.ic_person_pin)
+                .setLogo(R.drawable.people_map)
 //                        .setAlwaysShowSignInMethodScreen(true)
 //                .build(), RC_SIGN_IN
                 .build(), requestCode
@@ -109,7 +109,7 @@ object Util {
             hashMapOf(
                 NAME to "Dan",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-JwqhJ989hXw/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3rdvLnxofP2V96sjhxQ0lXf2HrRgKg.CMID/s64-c-mo/photo.jpg",
-                LOCATION to GeoPoint(40.66,  -73.949),
+                LOCATION to GeoPoint(40.66, -73.949),
                 VISIBILITY to "public"
             ),
             hashMapOf(
@@ -121,26 +121,57 @@ object Util {
             hashMapOf(
                 NAME to "Mihaela",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-o3phkZogqYY/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3reUul-g6ccRH73tgTbvAVUVAU5igQ.CMID/s64-c-mo/photo.jpg",
-                LOCATION to GeoPoint( 40.828, -74.067)
-                , VISIBILITY to "public"
+                LOCATION to GeoPoint(40.828, -74.067)
             ),
             hashMapOf(
                 NAME to "Victoria",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-aKPXx00bFf4/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3rfH3oBxY63PQ_FrT48c9yX2wf-U9A.CMID/s64-c-mo/photo.jpg",
-                LOCATION to GeoPoint(40.455,  -74.35)
-                , VISIBILITY to "public"
+                LOCATION to GeoPoint(40.455, -74.35)
             ),
             hashMapOf(
                 NAME to "AnDroid",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-r_wtGPpwhGo/AAAAAAAAAAI/AAAAAAAAAAA/ACHi3reJ6DA346tlC_Kv3OLbE_qdmt9r6Q.CMID/s64-c-mo/photo.jpg",
-                LOCATION to GeoPoint(40.774, -73.461)
-                , VISIBILITY to "public"
+                LOCATION to GeoPoint(41.2, -73.461)
             ),
             hashMapOf(
                 NAME to "Ionel",
                 PHOTO_URL to "https://lh3.googleusercontent.com/-FzX2I30Hhkw/AAAAAAAAAAI/AAAAAAAAFHY/ACHi3rc8vTf6ZzuNErb0cr5Ir9fem8AuvA.CMID/s64-c-mo/photo.jpg",
-                LOCATION to GeoPoint( 40.614,  -73.5)
-                , VISIBILITY to "public"
+                LOCATION to GeoPoint(40.614, -73.5)
+            ),
+            hashMapOf(
+                NAME to "Ivona",
+                PHOTO_URL to "https://firebasestorage.googleapis.com/v0/b/groupmap-6b346.appspot.com/o/faces%2Fface_1.jpg?alt=media&token=0cf56449-f626-45f4-9932-4aad4a48ab55",
+                LOCATION to GeoPoint(40.814, -73.4)
+            ),
+            hashMapOf(
+                NAME to "Helen",
+                PHOTO_URL to "https://firebasestorage.googleapis.com/v0/b/groupmap-6b346.appspot.com/o/faces%2Fface_2.jpg?alt=media&token=136beae6-4de7-4a4b-a79e-d3e2e24072b2",
+                LOCATION to GeoPoint(41.15, -73.05)
+            ),
+            hashMapOf(
+                NAME to "Michael",
+                PHOTO_URL to "https://firebasestorage.googleapis.com/v0/b/groupmap-6b346.appspot.com/o/faces%2Fface_3.jpg?alt=media&token=426a4174-5235-4a9a-a293-c540648219f0",
+                LOCATION to GeoPoint(40.68, -73.7)
+            ),
+            hashMapOf(
+                NAME to "Edwin",
+                PHOTO_URL to "https://firebasestorage.googleapis.com/v0/b/groupmap-6b346.appspot.com/o/faces%2Fface_4.jpg?alt=media&token=61a77fd9-61b6-4590-978b-81d7a464c17c",
+                LOCATION to GeoPoint(40.9, -73.1)
+            ),
+            hashMapOf(
+                NAME to "Alice",
+                PHOTO_URL to "https://firebasestorage.googleapis.com/v0/b/groupmap-6b346.appspot.com/o/faces%2Fface_5.jpg?alt=media&token=55854484-39e3-4655-986c-af672a8bc88f",
+                LOCATION to GeoPoint(41.0, -73.6)
+            ),
+            hashMapOf(
+                NAME to "Kevin",
+                PHOTO_URL to "https://firebasestorage.googleapis.com/v0/b/groupmap-6b346.appspot.com/o/faces%2Fface_6.jpg?alt=media&token=3ec22af7-f665-4ce5-be62-0f0c4f8ecbf2",
+                LOCATION to GeoPoint(40.9, -73.1)
+            ),
+            hashMapOf(
+                NAME to "Julia",
+                PHOTO_URL to "https://firebasestorage.googleapis.com/v0/b/groupmap-6b346.appspot.com/o/faces%2Fface_7.jpg?alt=media&token=36f171de-bccd-4c69-b557-7c43c86a860a",
+                LOCATION to GeoPoint(40.3, -74.5)
             )
         )
     }
@@ -174,6 +205,21 @@ object Util {
             prefs.edit().putString("pref_key_user_name", userName).apply()
     }
 
+
+    fun convertDpToPixel(dp: Float, context: Context): Int {
+        return (dp * (context.resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT)).toInt()
+    }
+
+    /**
+     * This method converts device specific pixels to density independent pixels.
+     *
+     * @param px A value in px (pixels) unit. Which we need to convert into db
+     * @param context Context to get resources and device specific display metrics
+     * @return A float value to represent dp equivalent to px value
+     */
+    fun convertPixelsToDp(px: Float, context: Context): Float {
+        return px / (context.resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT)
+    }
 
 }
 

@@ -41,8 +41,6 @@ class TrackerService : Service() {
         buildNotification()
         requestMyGpsLocation(this) { location ->
             updateDB(location, groupId)
-            stopForeground(true)
-            stopSelf()
         }
         return super.onStartCommand(intent, flags, startId)
     }
@@ -52,19 +50,11 @@ class TrackerService : Service() {
         val point = GeoPoint(location.latitude, location.longitude)
 
         FirebaseFirestore.getInstance().document("$GROUPS/$groupId/$USERS/$uid")
-            .set(
-                mapOf(
-                    LOCATION to point,
-                    "locationTimestamp" to com.google.firebase.Timestamp.now()
-                ), SetOptions.merge()
-            )
-            .addOnFailureListener {
-                Log.e("tag", "failed updating position: " + it.message)
+            .set(mapOf(LOCATION to point, "locationTimestamp" to com.google.firebase.Timestamp.now()), SetOptions.merge())
+            .addOnCompleteListener {
+                stopForeground(true)
+                stopSelf()
             }
-            .addOnSuccessListener {
-                Log.d("tag", "onComplete updated position ")
-            }
-
     }
 
     private fun buildNotification() {
@@ -86,15 +76,15 @@ class TrackerService : Service() {
         val broadcastIntent = PendingIntent.getBroadcast(
             this, 0, Intent(stop), PendingIntent.FLAG_UPDATE_CURRENT
         )
-        val time = SimpleDateFormat("hh:mm").format(Calendar.getInstance().getTime())
-        val notifTxt = "update request at $time"
+//        val time = SimpleDateFormat("hh:mm").format(Calendar.getInstance().getTime())
+        val notifTxt = "getting location"
         // Create the persistent notification
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(getString(R.string.app_name))
             .setContentText(notifTxt)
 //            .setOngoing(true)
             .setContentIntent(broadcastIntent)
-            .setSmallIcon(R.drawable.ic_tracker);
+            .setSmallIcon(R.drawable.ic_satelite)
         startForeground(1, builder.build())
     }
 
@@ -103,6 +93,7 @@ class TrackerService : Service() {
             Log.d(tag, "received stop broadcast")
             // Stop the service when the notification is tapped
             unregisterReceiver(this)
+            stopForeground(true)
             stopSelf()
         }
     }

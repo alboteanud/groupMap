@@ -7,8 +7,10 @@ import android.text.TextUtils
 import android.util.Log
 import android.view.View
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.isVisible
 import com.craiovadata.groupmap.R
 import com.craiovadata.groupmap.adapter.MemberAdapter
 import com.craiovadata.groupmap.utils.*
@@ -35,6 +37,7 @@ class GroupInfoActivity : BaseActivity() {
         infoButtonEditGroupName.setOnClickListener {
             buildAlertChangeGroupName()
         }
+
 
     }
 
@@ -67,7 +70,10 @@ class GroupInfoActivity : BaseActivity() {
 
     private fun buildAlertMemberOptions(member: DocumentSnapshot) {
         if (memberRole != ROLE_ADMIN) return
-        val roleSelectedUser = (userData?.get(ROLE) as? Long)?.toInt() ?: ROLE_USER
+        val roleSelectedUser = (member.get(ROLE) as? Long)?.toInt() ?: ROLE_USER
+
+        val uid = member.id
+        if (uid == auth.currentUser?.uid) return
 
         val listOptions = when (roleSelectedUser) {
             ROLE_ADMIN -> arrayOf("Remove", "Dismiss as admin")
@@ -75,13 +81,14 @@ class GroupInfoActivity : BaseActivity() {
             else -> return
         }
 
-        val ref = db.document("$GROUPS/$groupId/$USERS/${member.id}")
+        val batch = db.batch()
         val builder = AlertDialog.Builder(this)
 
         builder.setItems(listOptions) { dialogInterface: DialogInterface, i: Int ->
             when (i) {
                 0 -> {
-                    ref.delete()
+                    batch.delete(db.document("$GROUPS/$groupId/$USERS/$uid"))
+                    // will trigger a function to clear token and group in user
                 }
                 1 -> {
                     val newRole = when (roleSelectedUser) {
@@ -89,7 +96,7 @@ class GroupInfoActivity : BaseActivity() {
                         ROLE_USER -> ROLE_ADMIN
                         else -> return@setItems
                     }
-                    ref.update(mapOf(ROLE to newRole))
+                    batch.update(db.document("$GROUPS/$groupId/$USERS/$uid"), mapOf(ROLE to newRole))
                 }
             }
         }
@@ -97,12 +104,15 @@ class GroupInfoActivity : BaseActivity() {
     }
 
     private fun buildAlertChangeGroupName() {
+        if (memberRole != ROLE_ADMIN) return
         val textInputLayout = TextInputLayout(this)
         // if you look at android alert_dialog.xml, you will see the message textview have margin 14dp and padding 5dp. This is the reason why I use 19 here
         val padding = resources.getDimensionPixelOffset(R.dimen.dp_16)
         textInputLayout.setPadding(padding, padding, padding, 0)
         val input = EditText(this)
         textInputLayout.hint = "Group Name"
+        val groupName = groupData?.get(GROUP_NAME) as? String
+        if (groupName != null) input.setText(groupName, TextView.BufferType.EDITABLE)
         textInputLayout.addView(input)
 
         val builder = AlertDialog.Builder(this)
@@ -133,33 +143,32 @@ class GroupInfoActivity : BaseActivity() {
     }
 
     private fun handleIntent() {
+        val uid = auth.currentUser?.uid ?: return
         groupId = intent.getStringExtra(GROUP_ID) ?: return
-        setUpRecyclerView()
+
         db.document("$GROUPS/$groupId")
             .get().addOnSuccessListener { snapshot ->
                 if (snapshot != null && snapshot.exists()) {
                     Log.d(TAG, "Current data: ${snapshot.data}")
                     groupData = snapshot.data
-                    updateUI()
+                    val groupName = groupData?.get(GROUP_NAME) as? String
+                    if (groupName != null) infoGroupName.text = groupName
                 } else {
                     Log.d(TAG, "Current data: null")
                 }
             }
 
-        val uid = currentUser?.uid ?: return
+
         db.document("$GROUPS/$groupId/$USERS/$uid").get()
             .addOnSuccessListener { snap ->
-                userData = snap.data
-                memberRole = (userData?.get(ROLE) as? Long)?.toInt() ?: ROLE_USER
-                updateUI()
-
+                if (snap != null && snap.exists()) {
+                    memberRole = (snap.get(ROLE) as? Long)?.toInt() ?: ROLE_USER
+                    button_share_group.isVisible = memberRole == ROLE_ADMIN
+                    infoButtonEditGroupName.isVisible = memberRole == ROLE_ADMIN
+                }
             }
-    }
 
-    private fun updateUI() {
-        val groupName = groupData?.get(GROUP_NAME) as? String
-        infoGroupName.text = groupName ?: "Group Name"
-//        button_share_group.isVisible = memberRole == ROLE_ADMIN
+        setUpRecyclerView()
     }
 
 

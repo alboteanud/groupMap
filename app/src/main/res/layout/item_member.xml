@@ -19,7 +19,7 @@
         android:layout_marginBottom="8dp"
         android:background="#aaa"
         android:scaleType="centerCrop"
-        android:src="@drawable/ic_person_pin"
+        android:src="@drawable/ic_face"
         android:contentDescription="@string/description_person_icon"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -52,8 +52,11 @@
         app:layout_constraintBottom_toBottomOf="@+id/memberPhoto"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/memberPhoto"
+        android:textSize="12sp"
         tools:text="group admin"
-        android:visibility="gone"/>
+        android:visibility="gone"
+        tools:visibility="visible"
+        />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

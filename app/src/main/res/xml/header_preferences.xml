@@ -10,7 +10,7 @@
 
     <Preference
         app:fragment="com.craiovadata.groupmap.ui.SettingsActivity$InviteFragment"
-        app:icon="@drawable/ic_people_filled"
+        app:icon="@drawable/ic_face"
         app:key="invite_header"
         app:title="@string/invite_header" />
 

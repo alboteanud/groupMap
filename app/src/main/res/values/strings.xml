@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Map</string>
+    <string name="app_name">Group map</string>
 
     <string name="title_activity_maps">Group map</string>
     <string name="title_activity_group_info">Group info</string>
@@ -20,6 +20,7 @@
     <string name="connection_error">Connection error</string>
     <string name="error_default">Error default</string>
     <string name="base_share_url">https://groupmap-6b346.web.app/group/</string>
+    <string name="privacy_link">https://groupmap-6b346.web.app/privacy.html</string>
     <string name="btn_text_send_invitation">Send invitation</string>
     <string name="base_download_url">https://play.google.com/store/apps/details?</string>
     <string name="title_activity_settings">Settings</string>
@@ -40,6 +41,8 @@
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
     <string name="title_activity_my_groups">MyGroupsActivity</string>
     <string name="description_person_icon">group icon</string>
+
+
 
 
 </resources>

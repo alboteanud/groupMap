@@ -37,7 +37,7 @@ class CreateGroupActivity : BaseActivity() {
     }
 
     private fun updateUI() {
-        if (currentUser == null) {
+        if (auth.currentUser == null) {
             buttonCreateGroup.isEnabled = false
             buttonCreateGroup.alpha = 0.8f
             buttonLogin.visibility = VISIBLE
@@ -55,7 +55,7 @@ class CreateGroupActivity : BaseActivity() {
     }
 
     private fun createGroup(groupName: String) {
-        val uid = currentUser?.uid ?: return
+        val uid = auth.currentUser?.uid ?: return
         groupId = db.collection(GROUPS).document().id
         val shareKey = db.collection(DB_GROUP_SHARE_KEYS).document().id
 

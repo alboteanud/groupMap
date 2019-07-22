@@ -8,6 +8,7 @@ import com.craiovadata.groupmap.adapter.GroupAdapter
 import com.craiovadata.groupmap.utils.*
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.BuildConfig
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -15,7 +16,7 @@ import kotlinx.android.synthetic.main.activity_my_groups.*
 import kotlinx.android.synthetic.main.content_my_groups.*
 
 
-class MyGroupsActivity : AppCompatActivity(), GroupAdapter.OnItemSelectedListener {
+class MyGroupsActivity : BaseActivity(), GroupAdapter.OnItemSelectedListener {
     private var adapter: GroupAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,11 +44,9 @@ class MyGroupsActivity : AppCompatActivity(), GroupAdapter.OnItemSelectedListene
     }
 
     private fun setUpRecyclerView() {
-        val currentUser = FirebaseAuth.getInstance().currentUser ?: return
-        val uid = currentUser.uid
-        val db = FirebaseFirestore.getInstance()
-        val query = db.collection("$USER_GROUPS/$uid/$GROUPS")
-            .whereEqualTo(ROLE, ROLE_USER ).limit(100)
+        val uid = auth.currentUser?.uid ?: return
+        val query = db.collection("$USERS/$uid/$GROUPS")
+//            .whereEqualTo(ROLE, ROLE_USER ).limit(100)
 
         adapter = object: GroupAdapter(query, this@MyGroupsActivity){
 
@@ -64,6 +63,7 @@ class MyGroupsActivity : AppCompatActivity(), GroupAdapter.OnItemSelectedListene
 
             override fun onError(e: FirebaseFirestoreException) {
                 // Show a snackbar on errors
+                if (BuildConfig.DEBUG)
                 Snackbar.make(findViewById(android.R.id.content),
                     "Error: check logs for info.", Snackbar.LENGTH_LONG).show()
             }
@@ -75,6 +75,7 @@ class MyGroupsActivity : AppCompatActivity(), GroupAdapter.OnItemSelectedListene
         val resultIntent = Intent(this, MapActivity::class.java)
         resultIntent.putExtra(GROUP_ID, group.id)
         setResult(RESULT_OK, resultIntent)
+        saveGroupIdToPref(group.id)
         finish()
     }
 

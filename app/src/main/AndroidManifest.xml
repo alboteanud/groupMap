@@ -21,8 +21,8 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
         <activity
-            android:name=".ui.MyGroupsActivity"
-            android:label="@string/title_activity_my_groups"
+            android:name=".ui.SettingsActivity"
+            android:label="@string/title_activity_settings"
             android:parentActivityName=".ui.MapActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
@@ -30,9 +30,10 @@
                 android:value="com.craiovadata.groupmap.ui.MapActivity" />
         </activity>
         <activity
-            android:name=".ui.SettingsActivity"
-            android:label="@string/title_activity_settings"
-            android:parentActivityName=".ui.MapActivity">
+            android:name=".ui.MyGroupsActivity"
+            android:label="@string/title_activity_my_groups"
+            android:parentActivityName=".ui.MapActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.craiovadata.groupmap.ui.MapActivity" />
@@ -47,7 +48,6 @@
             android:label="@string/title_activity_maps"
             android:theme="@style/AppTheme.NoActionBar">
             <tools:validation testUrl="https://groupmap-6b346.web.app/group/GuquljW1zZTfv0O0T93E" />
-            <tools:validation testUrl="https://groupmap-6b346.web.app" />
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -63,16 +63,6 @@
                 <data
                     android:host="groupmap-6b346.web.app"
                     android:pathPrefix="/group/"
-                    android:scheme="https" />
-            </intent-filter>
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data
-                    android:host="groupmap-6b346.web.app"
                     android:scheme="https" />
             </intent-filter>
         </activity>

@@ -17,11 +17,13 @@
     string in this file.
     -->
     <!--for upload_key_2 SHA1 64:5D:DB:FB:F5:EB:C5:C6:7D:5C:4B:2C:CA:40:FE:BD:1C:A9:6F:C1-->
-    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyCOql4qhTYukSlRxE8_fVb2YHK-ZdxhPB8</string>
+  <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyCOql4qhTYukSlRxE8_fVb2YHK-ZdxhPB8</string>
+
 
 
     <!-- for Google Play release SHA-1 9A:32:11:02:23:92:7A:D9:EB:35:73:6C:5C:7C:A8:0E:DE:A1:04:24   -->
-    <!--<string name="google_maps_key" translatable="false" templateMergeStrategy="preserve">AIzaSyC-Kzp_jxHZj7fK4TXeRli40glflmWrWow</string>-->
-
+   <!--
+    <string name="google_maps_key" translatable="false" templateMergeStrategy="preserve"> </string>
+-->
 
 </resources>

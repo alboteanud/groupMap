@@ -7,7 +7,6 @@ const val DB_GROUP_SHARE_KEYS = "group_share_keys"
 const val DEFAULT_GROUP = "defaultGroup"
 const val NO_GROUP = "no_group"
 const val GROUP_SHARE_KEY = "share_key"
-const val USER_GROUPS = "userGroups"
 const val VISIBILITY = "visibility"
 
 

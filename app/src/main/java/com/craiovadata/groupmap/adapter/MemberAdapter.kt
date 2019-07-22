@@ -39,7 +39,7 @@ open class MemberAdapter(query: Query, private val listener: OnItemSelectedListe
             member[PHOTO_URL]?.let {
                 GlideApp.with(itemView.memberPhoto.context)
                     .load(it)
-                    .placeholder(R.drawable.ic_person_pin)
+                    .placeholder(R.drawable.ic_face)
                     .into(itemView.memberPhoto)
             }
 
@@ -51,11 +51,12 @@ open class MemberAdapter(query: Query, private val listener: OnItemSelectedListe
                 itemView.memberName.text = it as String
             }
 
-            val role = member[ROLE] as? Int ?: 0
+            val role = (member.get(ROLE) as? Long)?.toInt() ?: ROLE_USER
             if (role == ROLE_ADMIN) {
                 itemView.isAdminText.visibility = VISIBLE
                 itemView.isAdminText.text = "Group admin"
             } else {
+                itemView.isAdminText.text = null
                 itemView.isAdminText.visibility = GONE
             }
 

@@ -7,6 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/content_main"
+    tools:showIn="@layout/activity_map"
     >
 
     <fragment
@@ -16,16 +17,7 @@
         tools:context="com.craiovadata.groupmap.ui.MapActivity"
         android:name="com.google.android.gms.maps.SupportMapFragment"/>
 
-    <TextView
-        android:id="@+id/textViewTest"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        tools:text="text"
-        map:layout_constraintBottom_toBottomOf="@+id/map"
-        map:layout_constraintEnd_toEndOf="parent"
-        map:layout_constraintStart_toStartOf="parent"
-        map:layout_constraintTop_toTopOf="@+id/map" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
 
 
