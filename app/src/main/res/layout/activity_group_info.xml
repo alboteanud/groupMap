@@ -5,7 +5,7 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".ui.GroupInfoActivity">
+        tools:context=".activity.others_.GroupInfoActivity">
 
     <com.google.android.material.appbar.AppBarLayout
             android:layout_height="wrap_content"

@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context=".ui.MyGroupsActivity"
+    tools:context=".activity.others_.MyGroupsActivity"
     tools:showIn="@layout/activity_my_groups">
 
     <androidx.recyclerview.widget.RecyclerView

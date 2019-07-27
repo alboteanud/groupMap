@@ -20,23 +20,37 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
+        <activity android:name=".activity.main.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <provider
+            android:name=".koin.KoinInitContentProvider"
+            android:authorities="${applicationId}"
+            android:exported="false" />
+
         <activity
-            android:name=".ui.SettingsActivity"
+            android:name=".activity.others_.SettingsActivity"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".ui.MapActivity"
+            android:parentActivityName=".activity.map.MapActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.craiovadata.groupmap.ui.MapActivity" />
+                android:value="com.craiovadata.groupmap.activity.map.MapActivity" />
         </activity>
         <activity
-            android:name=".ui.MyGroupsActivity"
+            android:name=".activity.others_.MyGroupsActivity"
             android:label="@string/title_activity_my_groups"
-            android:parentActivityName=".ui.MapActivity"
+            android:parentActivityName=".activity.map.MapActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.craiovadata.groupmap.ui.MapActivity" />
+                android:value="com.craiovadata.groupmap.activity.map.MapActivity" />
         </activity>
 
         <meta-data
@@ -44,16 +58,12 @@
             android:value="@string/google_maps_key" />
 
         <activity
-            android:name=".ui.MapActivity"
+            android:name=".activity.map.MapActivity"
             android:label="@string/title_activity_maps"
             android:theme="@style/AppTheme.NoActionBar">
             <tools:validation testUrl="https://groupmap-6b346.web.app/group/GuquljW1zZTfv0O0T93E" />
 
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
 
@@ -67,29 +77,29 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.GroupInfoActivity"
+            android:name=".activity.others_.GroupInfoActivity"
             android:label="@string/title_activity_group_info"
-            android:parentActivityName=".ui.MapActivity"
+            android:parentActivityName=".activity.map.MapActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.craiovadata.groupmap.ui.MapActivity" />
+                android:value="com.craiovadata.groupmap.activity.map.MapActivity" />
         </activity>
         <activity
-            android:name=".ui.CreateGroupActivity"
+            android:name=".activity.others_.CreateGroupActivity"
             android:label="@string/title_activity_create_group"
-            android:parentActivityName=".ui.MapActivity"
+            android:parentActivityName=".activity.map.MapActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.craiovadata.groupmap.ui.MapActivity" />
+                android:value="com.craiovadata.groupmap.activity.map.MapActivity" />
         </activity>
 
         <service
-            android:name=".services.TrackerService"
+            android:name=".utils_.TrackerService"
             android:enabled="true" />
         <service
-            android:name=".services.MyMessagingService"
+            android:name=".fcm.MyMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

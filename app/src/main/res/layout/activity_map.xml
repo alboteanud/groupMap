@@ -1,39 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".ui.MapActivity">
+    android:id="@+id/root"
+    tools:context=".activity.map.MapActivity">
 
-    <com.google.android.material.appbar.AppBarLayout
+    <data>
+        <variable
+            name="mapViewModel"
+            type="com.craiovadata.groupmap.viewmodel.MapViewModel" />
+    </data>
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
+        <include layout="@layout/toolbar" />
+
+        <fragment
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            app:popupTheme="@style/AppTheme.PopupOverlay" />
+            android:layout_height="match_parent"
+            android:id="@+id/map"
+            tools:context=".activity.map.MapActivity"
+            android:name="com.google.android.gms.maps.SupportMapFragment"/>
+            <!--app:layout_behavior="@string/appbar_scrolling_view_behavior"-->
+        <!--android:layout_marginTop="?attr/actionBarSize"-->
 
-    </com.google.android.material.appbar.AppBarLayout>
 
-    <include layout="@layout/content_map"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-    <!--android:layout_marginTop="?attr/actionBarSize"-->
+    </LinearLayout>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabMyLocation"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_marginEnd="@dimen/fab_margin"
-        android:layout_marginBottom="72dp"
-        android:onClick="onFabClicked"
-        app:srcCompat="@drawable/ic_my_location" />
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</layout>
