@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.craiovadata.groupmap.repo.database_
+package com.craiovadata.groupmap.repo.oldDB
 
 import android.content.Context
 
@@ -70,9 +70,9 @@ abstract class GroupMapDatabase {
          * @param context The application context Singleton, used to get access to the filesystem.
          */
         fun getInstance(context: Context): GroupMapDatabase {
-            // Multiple threads can ask for the database at the same time, ensure we only initialize
+            // Multiple threads can ask for the database at the same locationTimestamp, ensure we only initialize
             // it once by using synchronized. Only one thread may enter a synchronized block at a
-            // time.
+            // locationTimestamp.
             synchronized(this) {
                 // Copy the current value of INSTANCE to a local variable so Kotlin can smart cast.
                 // Smart cast is only available to local variables.

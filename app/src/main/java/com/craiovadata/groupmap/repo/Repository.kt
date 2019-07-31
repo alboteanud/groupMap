@@ -18,29 +18,29 @@ package com.craiovadata.groupmap.repo
 
 import androidx.lifecycle.LiveData
 import androidx.paging.PagedList
-import com.craiovadata.groupmap.model.StockPrice
+import com.craiovadata.groupmap.model.User
 import com.google.common.util.concurrent.ListenableFuture
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-interface StockRepository {
+interface Repository {
 
     val allTickers: SortedSet<String>
 
     /**
      * Gets a LiveData object from this repo that reflects the current value of
-     * a single Stock, given by its ticker.
+     * a single Stock, given by its groupId.
      */
-    fun getStockPriceLiveData(ticker: String): LiveData<StockPriceOrException>
+    fun getGroupLiveData(groupId: String): LiveData<GroupOrException>
 
-    fun getStockPriceHistoryLiveData(ticker: String): LiveData<StockPriceHistoryQueryResults>
+    fun getUsersLiveData(groupId: String): LiveData<UsersQueryResults>
 
-    fun getStockPricePagedListLiveData(pageSize: Int): LiveData<PagedList<QueryItemOrException<StockPrice>>>
+    fun getUserPagedListLiveData(pageSize: Int): LiveData<PagedList<QueryItemOrException<User>>>
 
     /**
      * Synchronizes one stock record so it's available to this repo while offline
      */
-    fun syncStockPrice(ticker: String, timeout: Long, unit: TimeUnit): ListenableFuture<SyncResult>
+    fun syncGroup(groupId: String, timeout: Long, unit: TimeUnit): ListenableFuture<SyncResult>
 
 
     enum class SyncResult {

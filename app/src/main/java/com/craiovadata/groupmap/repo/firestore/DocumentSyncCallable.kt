@@ -18,7 +18,7 @@ package com.craiovadata.groupmap.repo.firestore
 
 import android.util.Log
 import com.google.firebase.firestore.*
-import com.craiovadata.groupmap.repo.StockRepository
+import com.craiovadata.groupmap.repo.Repository
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -27,7 +27,7 @@ internal class DocumentSyncCallable(
     private val documentRef: DocumentReference,
     private val timeout: Long,
     private val unit: TimeUnit
-) : Callable<StockRepository.SyncResult>, EventListener<DocumentSnapshot> {
+) : Callable<Repository.SyncResult>, EventListener<DocumentSnapshot> {
 
     companion object {
         private const val TAG = "DocumentSyncCallable"
@@ -38,7 +38,7 @@ internal class DocumentSyncCallable(
     private var snapshot: DocumentSnapshot? = null
     private var exception: Exception? = null
 
-    override fun call(): StockRepository.SyncResult {
+    override fun call(): Repository.SyncResult {
         // Adding MetadataChanges.INCLUDE here ensures that the listener
         // gets a callback when the server confirms the document we hold
         // is the latest (isFromCache == false)
@@ -46,14 +46,14 @@ internal class DocumentSyncCallable(
         try {
             if (latch.await(timeout, unit)) {
                 if (snapshot != null) {
-                    return StockRepository.SyncResult.SUCCESS
+                    return Repository.SyncResult.SUCCESS
                 }
             }
             else {
-                return StockRepository.SyncResult.TIMEOUT
+                return Repository.SyncResult.TIMEOUT
             }
 
-            return StockRepository.SyncResult.FAILURE
+            return Repository.SyncResult.FAILURE
         }
         finally {
             registration.remove()

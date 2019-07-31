@@ -36,7 +36,7 @@ abstract class LingeringLiveData<T> : LiveData<T>() {
 
     /**
      * Called two seconds after onInactive, but only if onActive is not
-     * called during that time.
+     * called during that locationTimestamp.
      */
     abstract fun endLingering()
 

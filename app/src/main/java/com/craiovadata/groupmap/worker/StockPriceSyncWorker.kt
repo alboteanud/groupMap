@@ -23,7 +23,7 @@ import android.util.Log
 import androidx.work.ListenableWorker
 import androidx.work.WorkerParameters
 import com.craiovadata.groupmap.config.AppExecutors
-import com.craiovadata.groupmap.repo.StockRepository
+import com.craiovadata.groupmap.repo.Repository
 import com.google.common.base.Function
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
@@ -39,31 +39,31 @@ class StockPriceSyncWorker(context: Context, params: WorkerParameters)
         private const val TAG = "StockSync"
 
         // Take a sync result and convert it to an appropriate WorkManager result
-        private val convertResult = Function<StockRepository.SyncResult, Result> { syncResult ->
+        private val convertResult = Function<Repository.SyncResult, Result> { syncResult ->
             when (syncResult) {
-                StockRepository.SyncResult.SUCCESS -> Result.success()
-                StockRepository.SyncResult.UNKNOWN -> Result.success()
-                StockRepository.SyncResult.FAILURE -> Result.failure()
-                StockRepository.SyncResult.TIMEOUT -> Result.retry()
+                Repository.SyncResult.SUCCESS -> Result.success()
+                Repository.SyncResult.UNKNOWN -> Result.success()
+                Repository.SyncResult.FAILURE -> Result.failure()
+                Repository.SyncResult.TIMEOUT -> Result.retry()
                 else -> Result.failure()
             }
         }
     }
 
-    private val repo by inject<StockRepository>()
+    private val repo by inject<Repository>()
     private val executors by inject<AppExecutors>()
 
     override fun startWork(): ListenableFuture<Result> {
-        val ticker = inputData.getString("ticker")
+        val ticker = inputData.getString("id")
         if (ticker == null) {
-            Log.e(TAG, "No ticker given to synchronize")
+            Log.e(TAG, "No id given to synchronize")
             val future = SettableFuture.create<Result>()
             future.set(Result.failure())
             return future
         }
 
         Log.d(TAG, "Synchronizing $ticker")
-        val syncFuture = repo.syncStockPrice(ticker, 5, TimeUnit.SECONDS)
+        val syncFuture = repo.syncGroup(ticker, 5, TimeUnit.SECONDS)
         return Futures.transform(syncFuture, convertResult, executors.cpuExecutorService)
     }
 

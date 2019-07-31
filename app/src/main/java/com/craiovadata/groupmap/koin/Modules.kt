@@ -19,15 +19,13 @@ package com.craiovadata.groupmap.koin
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.craiovadata.groupmap.config.AppExecutors
-import com.craiovadata.groupmap.repo.StockRepository
-import com.craiovadata.groupmap.repo.firestore.FirestoreStockRepository
-import com.craiovadata.groupmap.repo.rtdb.RealtimeDatabaseStockRepository
-import com.google.firebase.database.FirebaseDatabase
+import com.craiovadata.groupmap.repo.Repository
+import com.craiovadata.groupmap.repo.firestore.FirestoreRepository
 import org.koin.dsl.module.Module
 import org.koin.dsl.module.module
 
 interface RuntimeConfig {
-    var stockRepository: StockRepository
+    var repository: Repository
 }
 
 class SingletonRuntimeConfig : RuntimeConfig {
@@ -35,28 +33,28 @@ class SingletonRuntimeConfig : RuntimeConfig {
         val instance = SingletonRuntimeConfig()
     }
 
-    override var stockRepository: StockRepository = firestoreStockRepository
+    override var repository: Repository = firestoreStockRepository
 }
 
-private val firestoreStockRepository by lazy { FirestoreStockRepository() }
-private val realtimeDatabaseStockRepository by lazy { RealtimeDatabaseStockRepository() }
+private val firestoreStockRepository by lazy { FirestoreRepository() }
+//private val realtimeDatabaseStockRepository by lazy { RealtimeDatabaseGroupMapRepository() }
 
 val appModule: Module = module {
     single { firestoreStockRepository }
-    single { realtimeDatabaseStockRepository }
+//    single { realtimeDatabaseStockRepository }
     single { SingletonRuntimeConfig.instance as RuntimeConfig }
-    factory { get<RuntimeConfig>().stockRepository }
+    factory { get<RuntimeConfig>().repository }
     single { AppExecutors.instance }
 }
 
 val firebaseModule: Module = module {
     single { FirebaseAuth.getInstance() }
     single { FirebaseFirestore.getInstance() }
-    single {
-        val instance = FirebaseDatabase.getInstance()
-        instance.setPersistenceEnabled(false)
-        instance
-    }
+//    single {
+//        val instance = FirebaseDatabase.getInstance()
+//        instance.setPersistenceEnabled(false)
+//        instance
+//    }
 }
 
 val allModules = listOf(appModule, firebaseModule)

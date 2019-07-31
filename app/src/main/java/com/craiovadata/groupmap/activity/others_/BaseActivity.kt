@@ -39,7 +39,7 @@ abstract class BaseActivity : AppCompatActivity() {
         } else {
             when {
                 response == null -> {
-                    // User pressed the back button.
+                    // Member pressed the back button.
                 }
                 response.error?.errorCode == ErrorCodes.NO_NETWORK ->
                     Toast.makeText(this, getString(R.string.connection_error), Toast.LENGTH_SHORT).show()

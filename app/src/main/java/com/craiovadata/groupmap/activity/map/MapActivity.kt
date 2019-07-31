@@ -8,17 +8,15 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProviders
 import com.craiovadata.groupmap.utils_.MarkerRenderer
-import com.craiovadata.groupmap.repo.database_.MyDatabase
-import com.craiovadata.groupmap.repo.database_.MyDatabaseDao
+import com.craiovadata.groupmap.repo.oldDB.MyDatabase
+import com.craiovadata.groupmap.repo.oldDB.MyDatabaseDao
 import com.craiovadata.groupmap.databinding.ActivityMapBinding
-import com.craiovadata.groupmap.model.User
+import com.craiovadata.groupmap.model.Member
 import com.craiovadata.groupmap.activity.others_.CreateGroupActivity
 import com.craiovadata.groupmap.activity.others_.GroupInfoActivity
 import com.craiovadata.groupmap.activity.others_.SettingsActivity
@@ -36,22 +34,18 @@ import com.google.maps.android.clustering.Cluster
 import com.google.maps.android.clustering.ClusterManager
 import androidx.lifecycle.Observer
 import com.craiovadata.groupmap.R
-import com.craiovadata.groupmap.koin.RuntimeConfig
-import com.craiovadata.groupmap.repo.firestore.FirestoreStockRepository
-import com.craiovadata.groupmap.repo.rtdb.RealtimeDatabaseStockRepository
-import com.craiovadata.groupmap.viewmodel.MapViewModel
-import com.craiovadata.groupmap.viewmodel.ViewModelFactory
-import com.firebase.ui.auth.AuthUI
+import com.craiovadata.groupmap.viewmodel.old.MapViewModel
+import com.craiovadata.groupmap.viewmodel.old.factory.ViewModelFactory
 import com.firebase.ui.auth.ErrorCodes
 import com.firebase.ui.auth.IdpResponse
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.android.synthetic.main.activity_map.*
+import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.android.synthetic.main.toolbar.*
 import org.koin.android.ext.android.inject
 
 
-class MapActivity : AppCompatActivity(), ClusterManager.OnClusterClickListener<User>, OnMapReadyCallback {
+class MapActivity : AppCompatActivity(), ClusterManager.OnClusterClickListener<Member>, OnMapReadyCallback {
 
     companion object {
         private const val TAG = "MapActivity"
@@ -63,7 +57,7 @@ class MapActivity : AppCompatActivity(), ClusterManager.OnClusterClickListener<U
     }
 
     private var map: GoogleMap? = null
-    //    var clusterManager: ClusterManager<User>? = null
+    //    var clusterManager: ClusterManager<Member>? = null
     private var viewModel: MapViewModel? = null
     private lateinit var binding: ActivityMapBinding
 
@@ -152,12 +146,12 @@ class MapActivity : AppCompatActivity(), ClusterManager.OnClusterClickListener<U
     }
 
     var doneAnimating = false
-    private fun setUpUsersObserver(clusterManager: ClusterManager<User>) {
+    private fun setUpUsersObserver(clusterManager: ClusterManager<Member>) {
         viewModel?.getUsers()?.observe(this, Observer { users ->
             clusterManager.clearItems()
             clusterManager.addItems(users)
             clusterManager.cluster()
-            if (!doneAnimating) { // execute first time only
+            if (!doneAnimating) { // execute first locationTimestamp only
                 val cameraBounds = viewModel?.getCameraBounds() ?: return@Observer
                 val padding = convertDpToPixel(40 * resources.displayMetrics.density, this)
                 map?.animateCamera(CameraUpdateFactory.newLatLngBounds(cameraBounds, padding))
@@ -166,10 +160,10 @@ class MapActivity : AppCompatActivity(), ClusterManager.OnClusterClickListener<U
         })
     }
 
-    private fun setUpMap(): ClusterManager<User> {
+    private fun setUpMap(): ClusterManager<Member> {
         map?.setMaxZoomPreference(16f)
 //        map?.uiSettings?.isMapToolbarEnabled = true
-        val clusterManager: ClusterManager<User> = ClusterManager(this, map)
+        val clusterManager: ClusterManager<Member> = ClusterManager(this, map)
         clusterManager.renderer = MarkerRenderer(this, map, clusterManager)
         map?.setOnCameraIdleListener(clusterManager)
         map?.setOnMarkerClickListener(clusterManager)
@@ -219,7 +213,7 @@ class MapActivity : AppCompatActivity(), ClusterManager.OnClusterClickListener<U
 //        viewModel.setPositionsListener()
     }
 
-    override fun onClusterClick(cluster: Cluster<User>?): Boolean {
+    override fun onClusterClick(cluster: Cluster<Member>?): Boolean {
         if (cluster == null) return false
         // Show a toast with some info when the cluster is clicked.
         val firstName = cluster.items.iterator().next().name
@@ -364,6 +358,29 @@ class MapActivity : AppCompatActivity(), ClusterManager.OnClusterClickListener<U
         val vRoot: View = findViewById(R.id.root)
         Snackbar.make(vRoot, message, Snackbar.LENGTH_SHORT).show()
     }
+
+//    private fun setPositionsListener(mask: Boolean = false) {
+//        positionListenerRegistration?.remove()
+//        mMap?.clear()
+//        positionListenerRegistration = db.collection(GROUPS).document(groupId).collection(DEVICES)
+//            .addSnapshotListener(EventListener<QuerySnapshot> { snapshots, e ->
+//                if (e != null) {
+//                        if (snapshots == null) return@EventListener
+//                        for (dc in snapshots.documentChanges) {
+//                            when (dc.type) {
+//                                DocumentChange.Type.ADDED -> setMarker(this, dc.document, mask, mMarkers, mMap)
+//                                DocumentChange.Type.MODIFIED -> setMarker(this, dc.document, mask, mMarkers, mMap)
+//                                DocumentChange.Type.REMOVED -> Log.d(TAG, "Removed doc: ${dc.document.data}")
+//                                DocumentChange.Type.ADDED -> setMarker(applicationContext, dc.document, mask, mMarkers, mMap)
+//                                DocumentChange.Type.MODIFIED -> setMarker(applicationContext, dc.document, mask, mMarkers, mMap)
+//                                DocumentChange.Type.REMOVED -> {
+//                                    Log.d(TAG, "Removed doc: ${dc.document.data}")
+//                                    mMarkers.remove(dc.document.id)
+////                            setMarker(this, dc.document, true, mMarkers, mMap)
+//                                }
+//                            }
+//                        }
+//                    })
 
 
 }

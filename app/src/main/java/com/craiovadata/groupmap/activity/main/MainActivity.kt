@@ -7,17 +7,15 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Button
-import androidx.appcompat.widget.Toolbar
-import androidx.databinding.DataBindingUtil
 import com.craiovadata.groupmap.R
 import com.craiovadata.groupmap.activity.map.MapActivity
+import com.craiovadata.groupmap.activity.map.MapActivity2
 import com.craiovadata.groupmap.koin.RuntimeConfig
-import com.craiovadata.groupmap.repo.firestore.FirestoreStockRepository
-import com.craiovadata.groupmap.repo.rtdb.RealtimeDatabaseStockRepository
+import com.craiovadata.groupmap.repo.firestore.FirestoreRepository
+import com.craiovadata.groupmap.utils_.DEFAULT_GROUP
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.ErrorCodes
 import com.firebase.ui.auth.IdpResponse
-import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.android.synthetic.main.activity_create_group.*
@@ -125,15 +123,15 @@ class MainActivity : AppCompatActivity() {
 
         btnTrackPagedRecyclerView = findViewById(R.id.btn_track_paged_recycler_view)
         btnTrackPagedRecyclerView.setOnClickListener {
+            //            startActivity(Intent(this, AllStocksPagedRecyclerViewActivity::class.java))
                         startActivity(Intent(this, MapActivity::class.java))
         }
 
         btnStockHistory = findViewById(R.id.btn_stock_history)
         btnStockHistory.setOnClickListener {
             //            startActivity(StockPriceHistoryActivity.newIntent(this, "HSTK"))
+                        startActivity(MapActivity2.newIntent(this, DEFAULT_GROUP))
         }
-
-
     }
 
     private fun updateToggleButton() {
@@ -147,11 +145,12 @@ class MainActivity : AppCompatActivity() {
     private fun toggleDatabase() {
         when (database) {
             Database.Firestore -> {
-                runtimeConfig.stockRepository = inject<RealtimeDatabaseStockRepository>().value
+//                runtimeConfig.repository = inject<RealtimeDatabaseGroupMapRepository>().value
+                runtimeConfig.repository = inject<FirestoreRepository>().value
                 database = Companion.Database.RealtimeDatabase
             }
             Database.RealtimeDatabase -> {
-                runtimeConfig.stockRepository = inject<FirestoreStockRepository>().value
+                runtimeConfig.repository = inject<FirestoreRepository>().value
                 database = Database.Firestore
             }
         }

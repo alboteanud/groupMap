@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
+import com.craiovadata.groupmap.viewmodel.UserDisplay
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -140,7 +141,7 @@ object MapUtils {
 
 //                    val icon = BitmapDescriptorFactory.fromBitmap(resource)
                     if (marker?.tag != null) {
-                        val bitmap =   buildCustomIcon(resource)
+                        val bitmap = buildCustomIcon(resource)
                         val icon = BitmapDescriptorFactory.fromBitmap(bitmap)
                         marker.setIcon(icon)
                     }
@@ -167,8 +168,23 @@ object MapUtils {
         val canvas1 = Canvas(bmp)
         val color = Paint()
         canvas1.drawBitmap(resource, 0f, 0f, color)
-//        canvas1.drawText("User Name!", 30f, 40f, color)
+//        canvas1.drawText("Member Name!", 30f, 40f, color)
         return bmp
+    }
+
+    fun getCameraBounds(users: List<UserDisplay>): LatLngBounds? {
+        if (users.isNullOrEmpty()) return null
+        val builder = LatLngBounds.Builder()
+        users.forEach { user ->
+            if (user.position != null)
+                builder.include(user.position)
+        }
+        return try {
+            builder.build()
+        } catch (e: IllegalStateException) {
+            e.printStackTrace()
+            null
+        }
     }
 
 

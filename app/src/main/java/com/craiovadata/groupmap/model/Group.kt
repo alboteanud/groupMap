@@ -18,8 +18,10 @@ package com.craiovadata.groupmap.model
 
 import java.util.Date
 
-data class StockPrice(
-    val ticker: String,
-    val price: Float,
-    val time: Date
+data class Group(
+//    val id: String,
+//    val role: Float,
+    val groupName: String,
+//    val locationTimestamp: Date
+    val shareKey: String?
 )

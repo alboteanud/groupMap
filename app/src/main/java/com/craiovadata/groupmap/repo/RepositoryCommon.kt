@@ -17,7 +17,8 @@
 package com.craiovadata.groupmap.repo
 
 import com.craiovadata.groupmap.common.DataOrException
-import com.craiovadata.groupmap.model.StockPrice
+import com.craiovadata.groupmap.model.Group
+import com.craiovadata.groupmap.model.User
 
 /**
  * An item of data type T that resulted from a query. It adds the notion of
@@ -32,14 +33,15 @@ interface QueryItem<T> {
 typealias QueryItemOrException<T> = DataOrException<QueryItem<T>, Exception>
 
 
-data class StockPriceQueryItem(private val _item: StockPrice, private val _id: String) : QueryItem<StockPrice> {
-    override val item: StockPrice
+data class UserQueryItem(private val _item: User, private val _id: String) : QueryItem<User> {
+    override val item: User
         get() = _item
     override val id: String
         get() = _id
 }
 
-typealias StockPriceOrException = DataOrException<StockPrice, Exception>
+typealias UserOrException = DataOrException<User, Exception>
+typealias GroupOrException = DataOrException<Group, Exception>
 
 /**
  * The results of a database query (a List of QueryItems), or an Exception.
@@ -47,4 +49,4 @@ typealias StockPriceOrException = DataOrException<StockPrice, Exception>
 
 typealias QueryResultsOrException<T, E> = DataOrException<List<QueryItem<T>>, E>
 
-typealias StockPriceHistoryQueryResults = QueryResultsOrException<StockPrice, Exception>
+typealias UsersQueryResults = QueryResultsOrException<User, Exception>

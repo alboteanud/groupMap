@@ -69,7 +69,7 @@ class TrackerService : Service() {
         val broadcastIntent = PendingIntent.getBroadcast(
             this, 0, Intent(stop), PendingIntent.FLAG_UPDATE_CURRENT
         )
-//        val time = SimpleDateFormat("hh:mm").format(Calendar.getInstance().getTime())
+//        val locationTimestamp = SimpleDateFormat("hh:mm").format(Calendar.getInstance().getLocationTimestamp())
         val notifTxt = "getting location"
         // Create the persistent notification
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)

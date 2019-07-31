@@ -41,6 +41,12 @@
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
     <string name="title_activity_my_groups">MyGroupsActivity</string>
     <string name="description_person_icon">group icon</string>
+    <string name="title_activity_map2">Map 2</string>
+
+    <!--SHA-1 debug: 4D:84:35:60:E4:4C:0D:4E:CD:CC:91:3A:C7:F7:DF:CD:AC:D6:6A:3C-->
+    <!--release update_key2: 64:5D:DB:FB:F5:EB:C5:C6:7D:5C:4B:2C:CA:40:FE:BD:1C:A9:6F:C1-->
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyCOql4qhTYukSlRxE8_fVb2YHK-ZdxhPB8</string>
+
 
 
 </resources>

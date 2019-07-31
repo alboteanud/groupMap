@@ -1,8 +1,9 @@
-package com.craiovadata.groupmap.viewmodel
+package com.craiovadata.groupmap.viewmodel.old.factory
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.craiovadata.groupmap.repo.database_.MyDatabaseDao
+import com.craiovadata.groupmap.repo.oldDB.MyDatabaseDao
+import com.craiovadata.groupmap.viewmodel.old.MapViewModel
 
 class ViewModelFactory(
     private val dataSource: MyDatabaseDao

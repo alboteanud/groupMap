@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.craiovadata.groupmap">
+
     <!--
          The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
          Google Maps Android API v2, but you must specify either coarse or fine
@@ -20,7 +21,17 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".activity.main.MainActivity"
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/google_maps_key" />
+
+        <activity
+            android:name=".activity.map.MapActivity2"
+            android:label="@string/title_activity_map2"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
+        <activity
+            android:name=".activity.main.MainActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -52,17 +63,11 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.craiovadata.groupmap.activity.map.MapActivity" />
         </activity>
-
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="@string/google_maps_key" />
-
         <activity
             android:name=".activity.map.MapActivity"
             android:label="@string/title_activity_maps"
             android:theme="@style/AppTheme.NoActionBar">
             <tools:validation testUrl="https://groupmap-6b346.web.app/group/GuquljW1zZTfv0O0T93E" />
-
 
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />

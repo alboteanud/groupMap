@@ -16,6 +16,7 @@
 
 package com.craiovadata.groupmap.repo.firestore
 
+import android.text.format.Time
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
 import androidx.paging.LivePagedListBuilder
@@ -28,57 +29,62 @@ import com.google.firebase.firestore.Source
 import com.craiovadata.groupmap.config.AppExecutors
 import com.craiovadata.groupmap.livedata.firestore.FirestoreDocumentLiveData
 import com.craiovadata.groupmap.livedata.firestore.FirestoreQueryLiveData
-import com.craiovadata.groupmap.model.StockPrice
+import com.craiovadata.groupmap.model.User
 import com.craiovadata.groupmap.repo.*
+import com.craiovadata.groupmap.utils_.*
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
+import java.lang.System.currentTimeMillis
+import java.util.*
 import java.util.concurrent.TimeUnit
 
-class FirestoreStockRepository : BaseStockRepository(), KoinComponent {
+class FirestoreRepository : BaseRepository(), KoinComponent {
 
     private val executors by inject<AppExecutors>()
     private val firestore by inject<FirebaseFirestore>()
 
-    private val stocksLiveCollection = firestore.collection("stocks-live")
+    private val groupsLiveCollection = firestore.collection(GROUPS)
 
-    private val stockPriceDeserializer = StockPriceDocumentSnapshotDeserializer()
+    private val userDeserializer = UserDocumentSnapshotDeserializer()
+    private val groupDeserializer = GroupDocumentSnapshotDeserializer()
 
     private val listeningExecutor = MoreExecutors.listeningDecorator(executors.networkExecutorService)
 
-    override fun getStockPriceLiveData(ticker: String): LiveData<StockPriceOrException> {
-        val stockDocRef = stocksLiveCollection.document(ticker)
+    override fun getGroupLiveData(groupId: String): LiveData<GroupOrException> {
+        val groupDocRef = groupsLiveCollection.document(groupId)
 
         // This LiveData is going to emit DocumentSnapshot objects.  We need
-        // to transform those into StockPrice objects for the consumer.
-        val documentLiveData = FirestoreDocumentLiveData(stockDocRef)
+        // to transform those into User objects for the consumer.
+        val documentLiveData = FirestoreDocumentLiveData(groupDocRef)
 
         // When a transformation is fast and can be executed on the main
         // thread, we can use Transformations.map().
-        return Transformations.map(documentLiveData, DeserializeDocumentSnapshotTransform(stockPriceDeserializer))
+        return Transformations.map(documentLiveData, DeserializeDocumentSnapshotTransform(groupDeserializer))
 
         // But if a transformation is slow/blocking and shouldn't be executed
         // on the main thread, we can use Transformations.switchMap() with a
         // function that transforms on another thread and returns a LiveData.
-//        return Transformations.switchMap(documentLiveData, AsyncDeserializingDocumentSnapshotTransform(stockPriceDeserializer))
+//        return Transformations.switchMap(documentLiveData, AsyncDeserializingDocumentSnapshotTransform(userDeserializer))
     }
 
-    override fun getStockPriceHistoryLiveData(ticker: String): LiveData<StockPriceHistoryQueryResults> {
-        val priceHistoryColl = stocksLiveCollection.document(ticker).collection("recent-history")
-        val query = priceHistoryColl.orderBy("time")
+    override fun getUsersLiveData(groupId: String): LiveData<UsersQueryResults> {
+        val refUsersCollection = groupsLiveCollection.document(groupId).collection(USERS)
+        val dateRecent = Date(currentTimeMillis() - TimeUnit.HOURS.toMillis(1))
+        // query for recently updated users
+        val query = refUsersCollection.whereGreaterThan(LOCATION_TIMESTAMP, dateRecent)
         val queryLiveData = FirestoreQueryLiveData(query)
-        return Transformations.map(queryLiveData, DeserializeDocumentSnapshotsTransform(stockPriceDeserializer))
+        return Transformations.map(queryLiveData, DeserializeDocumentSnapshotsTransform(userDeserializer))
     }
 
-    override fun getStockPricePagedListLiveData(pageSize: Int): LiveData<PagedList<QueryItemOrException<StockPrice>>> {
-        val query = stocksLiveCollection.orderBy(FieldPath.documentId())
+    override fun getUserPagedListLiveData(pageSize: Int): LiveData<PagedList<QueryItemOrException<User>>> {
+        val query = groupsLiveCollection.orderBy(FieldPath.documentId())
         val dataSourceFactory = FirestoreQueryDataSource.Factory(query, Source.DEFAULT)
         val deserializedDataSourceFactory = dataSourceFactory.map { snapshot ->
             try {
-                val item = StockPriceQueryItem(stockPriceDeserializer.deserialize(snapshot), snapshot.id)
+                val item = UserQueryItem(userDeserializer.deserialize(snapshot), snapshot.id)
                 QueryItemOrException(item, null)
-            }
-            catch (e: Exception) {
-                QueryItemOrException<StockPrice>(null, e)
+            } catch (e: Exception) {
+                QueryItemOrException<User>(null, e)
             }
         }
 
@@ -87,8 +93,8 @@ class FirestoreStockRepository : BaseStockRepository(), KoinComponent {
             .build()
     }
 
-    override fun syncStockPrice(ticker: String, timeout: Long, unit: TimeUnit): ListenableFuture<StockRepository.SyncResult> {
-        val stockDocRef = stocksLiveCollection.document(ticker)
+    override fun syncGroup(groupId: String, timeout: Long, unit: TimeUnit): ListenableFuture<Repository.SyncResult> {
+        val stockDocRef = groupsLiveCollection.document(groupId)
         val callable = DocumentSyncCallable(stockDocRef, timeout, unit)
         return listeningExecutor.submit(callable)
     }

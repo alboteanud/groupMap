@@ -11,6 +11,7 @@ import com.android.installreferrer.api.ReferrerDetails
 import com.craiovadata.groupmap.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import java.util.*
 
 object GroupUtils {
 
@@ -50,7 +51,7 @@ object GroupUtils {
         val refGroup = db.document("$GROUPS/$DEFAULT_GROUP")
         val batch = db.batch()
         batch.set(refGroup, mapOf(GROUP_NAME to "New Yorkers"))
-        val persons = Util.getDummyUsers()
+        val persons = Util.getDummyUsers_()
         persons.forEachIndexed { index, person ->
             val ref = refGroup.collection(USERS).document(index.toString())
             batch.set(ref, person)

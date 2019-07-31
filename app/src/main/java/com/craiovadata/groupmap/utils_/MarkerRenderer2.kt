@@ -12,6 +12,7 @@ import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.craiovadata.groupmap.R
 import com.craiovadata.groupmap.model.Member
+import com.craiovadata.groupmap.viewmodel.UserDisplay
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.Marker
@@ -24,8 +25,8 @@ import java.lang.Exception
 import java.util.*
 import kotlin.math.min
 
-class MarkerRenderer(private val context: Context, map: GoogleMap?, clusterManager: ClusterManager<Member>?) :
-    DefaultClusterRenderer<Member>(context, map, clusterManager) {
+class MarkerRenderer2(private val context: Context, map: GoogleMap?, clusterManager: ClusterManager<UserDisplay>?) :
+    DefaultClusterRenderer<UserDisplay>(context, map, clusterManager) {
     private val mIconGenerator: IconGenerator = IconGenerator(context)
     private val mClusterIconGenerator: IconGenerator = IconGenerator(context)
     private val mImageView: ImageView
@@ -47,7 +48,7 @@ class MarkerRenderer(private val context: Context, map: GoogleMap?, clusterManag
 //        this.map = map
     }
 
-    override fun onBeforeClusterItemRendered(member: Member?, markerOptions: MarkerOptions) {
+    override fun onBeforeClusterItemRendered(userDisplay: UserDisplay, markerOptions: MarkerOptions) {
         // Draw a single member.
         // Set the info window to show their name.
 //        mImageView.setImageResource(R.drawable.ic_face);
@@ -56,7 +57,7 @@ class MarkerRenderer(private val context: Context, map: GoogleMap?, clusterManag
 //        markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon)).title(name)
     }
 
-    override fun onClusterItemRendered(clusterItem: Member, marker: Marker) {
+    override fun onClusterItemRendered(clusterItem: UserDisplay, marker: Marker) {
         super.onClusterItemRendered(clusterItem, marker)
 //        if (clusterItem == null || marker == null) return
         marker.tag = TAG
@@ -97,7 +98,7 @@ class MarkerRenderer(private val context: Context, map: GoogleMap?, clusterManag
         }
     }
 
-    override fun onClusterRendered(cluster: Cluster<Member>, marker: Marker) {
+    override fun onClusterRendered(cluster: Cluster<UserDisplay>, marker: Marker) {
         super.onClusterRendered(cluster, marker)
 //        if (cluster == null || marker == null) return
         marker.tag = TAG
@@ -155,7 +156,7 @@ class MarkerRenderer(private val context: Context, map: GoogleMap?, clusterManag
         }
     }
 
-    override fun onBeforeClusterRendered(cluster: Cluster<Member>, markerOptions: MarkerOptions) {
+    override fun onBeforeClusterRendered(cluster: Cluster<UserDisplay>, markerOptions: MarkerOptions) {
 
         // Draw multiple people.
         // Note: this method runs on the UI thread. Don't spend too much locationTimestamp in here (like in this example).
@@ -181,7 +182,7 @@ class MarkerRenderer(private val context: Context, map: GoogleMap?, clusterManag
 
     }
 
-    override fun shouldRenderAsCluster(cluster: Cluster<Member>): Boolean {
+    override fun shouldRenderAsCluster(cluster: Cluster<UserDisplay>): Boolean {
 //        return super.shouldRenderAsCluster(cluster)
         // Always render clusters.
         return cluster.size > 1

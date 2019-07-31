@@ -60,7 +60,7 @@
                 android:id="@+id/btn_stock_history"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="History" />
+                android:text="Map 2" />
 
         </LinearLayout>
 

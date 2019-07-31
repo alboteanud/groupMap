@@ -1,12 +1,12 @@
-package com.craiovadata.groupmap.viewmodel
+package com.craiovadata.groupmap.viewmodel.old
 
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
-import com.craiovadata.groupmap.repo.database_.MyDatabaseDao
-import com.craiovadata.groupmap.model.User
+import com.craiovadata.groupmap.repo.oldDB.MyDatabaseDao
+import com.craiovadata.groupmap.model.Member
 import com.craiovadata.groupmap.utils_.*
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.firebase.auth.FirebaseAuth
@@ -53,7 +53,7 @@ class MapViewModel(var database: MyDatabaseDao) : ViewModel() {
         // Do an asynchronous operation to fetch allGroupUsers.
         database.fetchAllMembers { allMembers ->
             allGroupUsers.value = allMembers?.mapNotNull { member ->
-                val person = User(member)
+                val person = Member(member)
                 if (person.position == null) null
                 else person
             }
@@ -136,11 +136,11 @@ class MapViewModel(var database: MyDatabaseDao) : ViewModel() {
 
     }
 
-    private val allGroupUsers: MutableLiveData<List<User>> by lazy {
-        MutableLiveData<List<User>>().also { loadUsers() }
+    private val allGroupUsers: MutableLiveData<List<Member>> by lazy {
+        MutableLiveData<List<Member>>().also { loadUsers() }
     }
 
-    fun getUsers(): LiveData<List<User>> {
+    fun getUsers(): LiveData<List<Member>> {
         return allGroupUsers
     }
 

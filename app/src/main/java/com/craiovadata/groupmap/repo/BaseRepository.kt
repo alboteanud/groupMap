@@ -18,7 +18,7 @@ package com.craiovadata.groupmap.repo
 
 import java.util.*
 
-abstract class BaseStockRepository : StockRepository {
+abstract class BaseRepository : Repository {
 
     override val allTickers: SortedSet<String> = sortedSetOf(
         "HSTK", "FBAS",

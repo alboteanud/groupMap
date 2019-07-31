@@ -8,7 +8,7 @@
     <data>
         <variable
             name="mapViewModel"
-            type="com.craiovadata.groupmap.viewmodel.MapViewModel" />
+            type="com.craiovadata.groupmap.viewmodel.old.MapViewModel" />
     </data>
 
     <LinearLayout

@@ -39,9 +39,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         Log.d(TAG, "From: ${message.from}, To: ${message.to}")
         Log.d(TAG, "Data: ${message.data}")
 
-        val ticker = message.data["ticker"]
+        val ticker = message.data["id"]
         if (ticker == null || ticker.isEmpty()) {
-            Log.w(TAG, "No ticker found in message")
+            Log.w(TAG, "No id found in message")
             return
         }
 
@@ -49,7 +49,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
-        val data = workDataOf("ticker" to ticker)
+        val data = workDataOf("id" to ticker)
         val workRequest = OneTimeWorkRequestBuilder<StockPriceSyncWorker>()
             .setConstraints(constraints)
             .setInputData(data)
