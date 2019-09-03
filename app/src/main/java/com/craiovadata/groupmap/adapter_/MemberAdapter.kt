@@ -10,7 +10,7 @@ import com.craiovadata.groupmap.R
 import com.craiovadata.groupmap.utils_.*
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.Query
-import kotlinx.android.synthetic.main.item_member.view.*
+import kotlinx.android.synthetic.main.member_list_item.view.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -24,7 +24,7 @@ open class MemberAdapter(query: Query, private val listener: OnItemSelectedListe
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
 
-        return ViewHolder(inflater.inflate(R.layout.item_member, parent, false))
+        return ViewHolder(inflater.inflate(R.layout.member_list_item, parent, false))
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -54,7 +54,7 @@ open class MemberAdapter(query: Query, private val listener: OnItemSelectedListe
             val role = (member.get(ROLE) as? Long)?.toInt() ?: ROLE_USER
             if (role == ROLE_ADMIN) {
                 itemView.isAdminText.visibility = VISIBLE
-                itemView.isAdminText.text = "Group admin"
+                itemView.isAdminText.text = itemView.context.getString(R.string.label_admin)
             } else {
                 itemView.isAdminText.text = null
                 itemView.isAdminText.visibility = GONE

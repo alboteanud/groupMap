@@ -17,12 +17,14 @@
 package com.craiovadata.groupmap.model
 
 import com.google.android.gms.maps.model.LatLng
+import com.google.gson.annotations.SerializedName
 import java.util.Date
 
 data class User(
     val name: String,
-    val photoUrl: String?,
+    val img: String?,
     val role: Int?,
-    val location: LatLng?,
-    val locationTimestamp: Date?
+    val loc: LatLng?,
+    val time: Date?,
+    val pause: Boolean?
 )

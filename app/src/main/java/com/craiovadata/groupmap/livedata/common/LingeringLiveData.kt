@@ -36,7 +36,7 @@ abstract class LingeringLiveData<T> : LiveData<T>() {
 
     /**
      * Called two seconds after onInactive, but only if onActive is not
-     * called during that locationTimestamp.
+     * called during that time.
      */
     abstract fun endLingering()
 
@@ -54,7 +54,7 @@ abstract class LingeringLiveData<T> : LiveData<T>() {
     @CallSuper
     override fun onInactive() {
         handler.postDelayed(stopLingeringRunnable, STOP_LISTENING_DELAY)
-        stopLingeringPending = true
+        stopLingeringPending = true // was true
     }
 
     private inner class StopLingeringRunnable : Runnable {

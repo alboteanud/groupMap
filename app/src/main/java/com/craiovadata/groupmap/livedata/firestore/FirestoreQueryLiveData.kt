@@ -16,6 +16,7 @@
 
 package com.craiovadata.groupmap.livedata.firestore
 
+import android.util.Log
 import com.google.firebase.firestore.*
 import com.craiovadata.groupmap.common.DataOrException
 import com.craiovadata.groupmap.config.AppExecutors
@@ -29,8 +30,11 @@ class FirestoreQueryLiveData(private val query: Query)
     : LingeringLiveData<DocumentSnapshotsOrException>(), EventListener<QuerySnapshot>, KoinComponent {
 
     private val executors by inject<AppExecutors>()
-
     private var listenerRegistration: ListenerRegistration? = null
+
+    init {
+        Log.d("tag", "start query ")
+    }
 
     override fun beginLingering() {
         listenerRegistration = query.addSnapshotListener(
@@ -47,5 +51,7 @@ class FirestoreQueryLiveData(private val query: Query)
         val documents = snapshot?.documents
         postValue(DocumentSnapshotsOrException(documents, e))
     }
+
+
 
 }

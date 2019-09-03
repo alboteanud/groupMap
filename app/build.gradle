@@ -3,15 +3,24 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'io.fabric'
 
 android {
+    signingConfigs {
+        release {
+            storeFile file('/Users/danalboteanu/AndroidStudioProjects/upload_key_2.jks')
+            storePassword '666666'
+            keyAlias = 'key0'
+            keyPassword '666666'
+        }
+    }
     compileSdkVersion 28
     defaultConfig {
         applicationId 'com.craiovadata.groupmap'
-        minSdkVersion 24
+        minSdkVersion 23
         targetSdkVersion 28
-        versionCode 25
-        versionName '25'
+        versionCode 34
+        versionName '3.4'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -20,26 +29,30 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    compileOptions {
-        sourceCompatibility '1.8'
-        targetCompatibility '1.8'
-//        sourceCompatibility 'JavaVersion.VERSION_1_8'
-//        targetCompatibility 'JavaVersion.VERSION_1_8'
-    }
 
     dataBinding {
         enabled = true
+    }
+
+    lintOptions{
+        // Timber needs to update to new Lint API
+        disable 'ObsoleteLintCustomCheck'
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
 
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$rootProject.kotlinVersion"
 
     implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation 'androidx.recyclerview:recyclerview:1.0.0'
-    implementation 'com.google.android.material:material:1.0.0'
+//    implementation 'com.google.android.material:material:1.0.0'
+    implementation "com.google.android.material:material:$rootProject.materialVersion"
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
 
     implementation 'androidx.core:core-ktx:1.0.2'
@@ -47,24 +60,32 @@ dependencies {
     implementation 'com.google.android.gms:play-services-maps:17.0.0'
     implementation 'com.google.maps.android:android-maps-utils:0.5'
 
-    implementation 'com.google.firebase:firebase-auth:18.1.0'
-    implementation 'com.google.firebase:firebase-firestore:20.2.0'
-//    implementation 'com.google.firebase:firebase-database:18.0.0'
-    implementation 'com.google.firebase:firebase-messaging:19.0.1'
-    implementation 'com.google.firebase:firebase-functions:18.1.0'
+    implementation 'com.google.firebase:firebase-auth:19.0.0'
+    implementation 'com.google.firebase:firebase-firestore:21.0.0'
+    implementation 'com.google.firebase:firebase-messaging:20.0.0'
+    implementation 'com.google.firebase:firebase-functions:19.0.0'
     implementation 'com.firebaseui:firebase-ui-firestore:4.3.1'
+    implementation 'com.google.firebase:firebase-analytics:17.1.0'
 
     implementation 'com.firebaseui:firebase-ui-auth:5.0.0'
     implementation 'com.google.android.gms:play-services-location:17.0.0'
     implementation 'com.android.installreferrer:installreferrer:1.0'
-    implementation 'com.google.firebase:firebase-core:17.0.1'
-
+    implementation 'com.google.firebase:firebase-core:17.1.0'
+    implementation 'com.crashlytics.sdk.android:crashlytics:2.10.1'
 
     implementation 'androidx.lifecycle:lifecycle-extensions:2.0.0'
-    implementation 'androidx.paging:paging-runtime:2.1.0'
     implementation 'android.arch.work:work-runtime-ktx:1.0.1'
 
     implementation 'org.koin:koin-android:1.0.2'
     implementation "com.github.bumptech.glide:glide:4.9.0"
     kapt 'com.github.bumptech.glide:compiler:4.9.0'
+
+    api 'com.jakewharton.timber:timber:4.7.1'
+
+    // Dagger
+    implementation "com.google.dagger:dagger-android:$rootProject.dagger"
+    implementation "com.google.dagger:dagger-android-support:$rootProject.dagger"
+    kapt "com.google.dagger:dagger-compiler:$rootProject.dagger"
+    kapt "com.google.dagger:dagger-android-processor:$rootProject.dagger"
+
 }

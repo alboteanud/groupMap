@@ -5,47 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context=".activity.others_.CreateGroupActivity"
+    tools:context=".activity.creategroup.CreateGroupActivity"
     tools:showIn="@layout/activity_create_group"
     android:id="@+id/content_create_group"
     >
-
-    <Button
-        android:id="@+id/buttonLogin"
-        android:layout_width="240dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
-        android:text="Login"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <EditText
-        android:id="@+id/editTextGroupName"
-        android:layout_width="240dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="80dp"
-        android:drawableStart="@drawable/ic_people"
-        android:drawablePadding="8dp"
-        android:hint="@string/label_group_name"
-        android:inputType="textPersonName"
-        android:maxLines="1"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/buttonLogin" />
-
-
-    <Button
-        android:id="@+id/buttonCreateGroup"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="@string/buttonTextCreateGroup"
-        app:layout_constraintEnd_toEndOf="@+id/editTextGroupName"
-        app:layout_constraintStart_toStartOf="@+id/editTextGroupName"
-        app:layout_constraintTop_toBottomOf="@+id/editTextGroupName"
-
-        />
 
     <ProgressBar
         android:id="@+id/progress_circular"
@@ -53,10 +16,41 @@
         android:layout_height="wrap_content"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/editTextGroupName"
+        app:layout_constraintEnd_toEndOf="@+id/editTextGroupName"
+        app:layout_constraintStart_toStartOf="@+id/editTextGroupName"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible" />
+
+    <EditText
+        android:id="@+id/editTextGroupName"
+        android:layout_width="240dp"
+        android:layout_height="wrap_content"
+        android:drawableStart="@drawable/ic_people"
+        android:drawablePadding="8dp"
+        android:layout_marginBottom="24dp"
+        android:hint="@string/label_group_name"
+        android:inputType="textPersonName"
+        android:maxLines="1"
+        app:layout_constraintBottom_toTopOf="@+id/buttonCreateGroup"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/buttonLogin"
-        tools:visibility="visible" />
+
+        />
+
+    <Button
+        android:id="@+id/buttonCreateGroup"
+        android:layout_width="@dimen/btn_width"
+        android:layout_height="@dimen/btn_height"
+        android:layout_marginBottom="20dp"
+        android:text="@string/buttonTextCreateGroup"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/editTextGroupName"
+        app:layout_constraintStart_toStartOf="@+id/editTextGroupName"
+        app:layout_constraintTop_toTopOf="parent"
+      />
+
+
+
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

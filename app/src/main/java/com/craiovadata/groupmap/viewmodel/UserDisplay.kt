@@ -1,42 +1,34 @@
 package com.craiovadata.groupmap.viewmodel
 
-import android.annotation.SuppressLint
+import android.widget.ImageView
 import com.craiovadata.groupmap.diffcallback.QueryItemDiffCallback
 import com.craiovadata.groupmap.model.User
+import com.bumptech.glide.request.RequestOptions
+import com.bumptech.glide.Glide
+import androidx.databinding.BindingAdapter
+import com.craiovadata.groupmap.R
+import com.craiovadata.groupmap.utils_.ROLE_ADMIN
 
-import com.craiovadata.groupmap.viewmodel.Formatters.priceFormatter
-import com.craiovadata.groupmap.viewmodel.Formatters.timeFormatter
-import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.clustering.ClusterItem
-import java.text.NumberFormat
-import java.text.SimpleDateFormat
-import java.util.*
 
 /**
  * A container class for displaying properly formatted stock role data.
  */
-
 data class UserDisplay(
-//    val id: String,
     val name: String,
     val photoUrl: String?,
-    val role: Int?,
-    val location: LatLng?,
-    val locationTimestamp: Date?
-): ClusterItem {
-
-    override fun getSnippet(): String? {
-        return null
+    val role: Int?
+)  {
+    fun isAdmin(): Boolean {
+        return role!=null && role >= ROLE_ADMIN
     }
+}
 
-    override fun getTitle(): String {
-        return name
-    }
-
-    override fun getPosition(): LatLng? {
-        return location
-    }
-
+@BindingAdapter("app:profileImageI")
+fun loadImage(view: ImageView, imageUrl: String?) {
+    Glide.with(view.getContext())
+        .load(imageUrl).apply(RequestOptions().circleCrop())
+        .placeholder(R.drawable.ic_face)
+        .into(view)
 }
 
 /**
@@ -44,32 +36,11 @@ data class UserDisplay(
  */
 
 fun User.toUserDisplay() = UserDisplay(
-//    this.id,
     this.name,
-    this.photoUrl,
-    this.role,
-    this.location,
-    this.locationTimestamp
-//    this.id,
-//    priceFormatter.format(this.role),
-//    timeFormatter.format(this.locationTimestamp)
+    this.img,
+    this.role
 )
 
-val stockPriceDisplayDiffCallback = object : QueryItemDiffCallback<UserDisplay>() {}
 
+val userDisplayDiffCallback = object : QueryItemDiffCallback<UserDisplay>() {}
 
-@SuppressLint("SimpleDateFormat")
-private object Formatters {
-
-    val timeFormatter by lazy {
-        SimpleDateFormat("HH:mm:ss")
-    }
-
-    val priceFormatter by lazy {
-        val priceFormatter = NumberFormat.getNumberInstance()
-        priceFormatter.minimumFractionDigits = 2
-        priceFormatter.maximumFractionDigits = 2
-        priceFormatter
-    }
-
-}

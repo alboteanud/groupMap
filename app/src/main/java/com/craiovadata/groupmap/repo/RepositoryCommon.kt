@@ -1,18 +1,3 @@
-/*
- * Copyright 2018 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 package com.craiovadata.groupmap.repo
 
@@ -32,7 +17,6 @@ interface QueryItem<T> {
 
 typealias QueryItemOrException<T> = DataOrException<QueryItem<T>, Exception>
 
-
 data class UserQueryItem(private val _item: User, private val _id: String) : QueryItem<User> {
     override val item: User
         get() = _item
@@ -40,8 +24,17 @@ data class UserQueryItem(private val _item: User, private val _id: String) : Que
         get() = _id
 }
 
+data class GroupQueryItem(private val _item: Group, private val _id: String) : QueryItem<Group> {
+    override val item: Group
+        get() = _item
+    override val id: String
+        get() = _id
+}
+
 typealias UserOrException = DataOrException<User, Exception>
 typealias GroupOrException = DataOrException<Group, Exception>
+typealias GroupIdOrException = DataOrException<String?, Exception?>
+typealias SuccessOrException = DataOrException<String?, Exception?>
 
 /**
  * The results of a database query (a List of QueryItems), or an Exception.
@@ -50,3 +43,4 @@ typealias GroupOrException = DataOrException<Group, Exception>
 typealias QueryResultsOrException<T, E> = DataOrException<List<QueryItem<T>>, E>
 
 typealias UsersQueryResults = QueryResultsOrException<User, Exception>
+typealias GroupsQueryResults = QueryResultsOrException<Group, Exception>

@@ -1,0 +1,13 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.craiovadata.test.MainActivity">
+
+    <item
+        android:id="@+id/menu_item_edit_group_name"
+        android:title="@string/action_bound_users"
+        android:icon="@drawable/ic_edit"
+        app:showAsAction="ifRoom"/>
+
+
+</menu>

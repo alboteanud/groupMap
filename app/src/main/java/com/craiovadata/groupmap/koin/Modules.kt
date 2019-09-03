@@ -21,6 +21,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.craiovadata.groupmap.config.AppExecutors
 import com.craiovadata.groupmap.repo.Repository
 import com.craiovadata.groupmap.repo.firestore.FirestoreRepository
+import com.google.firebase.analytics.FirebaseAnalytics
 import org.koin.dsl.module.Module
 import org.koin.dsl.module.module
 

@@ -22,6 +22,7 @@ import android.database.Cursor
 import android.net.Uri
 import android.util.Log
 import org.koin.android.ext.android.startKoin
+import timber.log.Timber
 
 /**
  * Initializes Koin automatically at app process start when this
@@ -30,14 +31,10 @@ import org.koin.android.ext.android.startKoin
 
 class KoinInitContentProvider : ContentProvider() {
 
-    companion object {
-        private const val TAG = "KoinInitContentProvider"
-    }
-
     override fun onCreate(): Boolean {
         startKoin(context!!, allModules)
         val config = SingletonRuntimeConfig.instance
-        Log.i(TAG, "Repository: ${config.repository.javaClass.canonicalName}")
+        Timber.i("Repository: ${config.repository.javaClass.canonicalName}")
         return true
     }
 

@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context=".activity.others_.MyGroupsActivity"
+    tools:context=".activity.mygroups.MyGroupsActivity"
     tools:showIn="@layout/activity_my_groups">
 
     <androidx.recyclerview.widget.RecyclerView
@@ -13,6 +13,31 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        tools:listitem="@layout/item_member" />
+        tools:listitem="@layout/group_list_item" />
+
+    <!-- View for empty ratings -->
+    <LinearLayout
+        android:id="@+id/view_empty_list"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            style="@style/AppTheme.PizzaGuy"
+            android:src="@drawable/pizza_monster"
+            android:contentDescription="pizza guy"/>
+
+        <TextView
+            style="@style/AppTheme.Body1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/message_no_groups"
+            android:textColor="@color/greyDisabled" />
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

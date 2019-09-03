@@ -1,52 +1,70 @@
 <resources>
     <string name="app_name">Group map</string>
 
-    <string name="title_activity_maps">Group map</string>
+    <string name="title_activity_map">Group map</string>
     <string name="title_activity_group_info">Group info</string>
     <string name="title_activity_create_group">New group</string>
+    <string name="title_activity_entry">Welcome to Group Map</string>
+    <string name="title_activity_share_key">Check out group</string>
+    <string name="title_activity_control_panel">Control panel</string>
+    <string name="title_activity_new_group">New group</string>
+    <string name="title_activity_my_groups">My groups</string>
 
-    <string name="action_settings">Settings</string>
+    <string name="action_control_panel">My groups</string>
     <string name="action_create_group">New group</string>
-    <string name="action_find_group">Find group</string>
+    <string name="action_group_info">Group info</string>
+    <string name="action_exit_group">Exit group</string>
+    <string name="action_invite">Invite members</string>
 
     <string name="label_group_name">Group name</string>
     <string name="buttonTextCreateGroup">Create group</string>
-    <string name="notification_text">Tracking, tap to cancel</string>
-    <string name="transport_id" translatable="false">125</string>
-    <string name="firebase_path" translatable="false">locations</string>
+
     <string name="toast_group_created_success">The group was created</string>
     <string name="toast_group_creation_error">Error creating the group</string>
+
     <string name="error_msg_title_not_blank">This field can not be blank</string>
-    <string name="connection_error">Connection error</string>
+    <string name="error_connection">Connection error</string>
     <string name="error_default">Error default</string>
+
     <string name="base_share_url">https://groupmap-6b346.web.app/group/</string>
     <string name="privacy_link">https://groupmap-6b346.web.app/privacy.html</string>
-    <string name="btn_text_send_invitation">Send invitation</string>
+    <string name="terms_of_service_link">https://groupmap-6b346.web.app/terms.html</string>
     <string name="base_download_url">https://play.google.com/store/apps/details?</string>
-    <string name="title_activity_settings">Settings</string>
 
-    <!-- Preference Titles -->
-    <string name="account_header">Account</string>
-    <string name="invite_header">Invite a friend</string>
-
-    <!-- Messages Preferences -->
-    <string name="name_pref_title">Your name</string>
-    <string name="reply_title">Default reply action</string>
-    <string name="pref_key_user_name">pref_key_user_name</string>
-
-    <!-- Sync Preferences -->
-    <string name="sync_title">Sync email periodically</string>
-    <string name="attachment_title">Download incoming attachments</string>
-    <string name="attachment_summary_on">Automatically download attachments for incoming emails</string>
-    <string name="attachment_summary_off">Only download attachments when manually requested</string>
-    <string name="title_activity_my_groups">MyGroupsActivity</string>
     <string name="description_person_icon">group icon</string>
-    <string name="title_activity_map2">Map 2</string>
+    <string name="message_no_groups">Be the first to create a group!</string>
 
     <!--SHA-1 debug: 4D:84:35:60:E4:4C:0D:4E:CD:CC:91:3A:C7:F7:DF:CD:AC:D6:6A:3C-->
     <!--release update_key2: 64:5D:DB:FB:F5:EB:C5:C6:7D:5C:4B:2C:CA:40:FE:BD:1C:A9:6F:C1-->
     <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyCOql4qhTYukSlRxE8_fVb2YHK-ZdxhPB8</string>
+    <string name="log_in_to_discover">Log in to discover the app</string>
+    <string name="label_log_out">Log out</string>
+    <string name="title_activity_my_profile">My profile</string>
+    <string name="label_control_panel">Control panel</string>
+    <string name="label_log_in">Log in</string>
+    <string name="action_bound_users">Bound users on map</string>
+    <string name="wellcome_text">Wellcome to Group Map !</string>
+    <string name="label_menu_privacy_policy">Privacy policy</string>
+    <string name="action_pause_location">Pause location</string>
+    <string name="action_allow_location">Allow location</string>
+    <string name="label_admin">Group admin</string>
 
+
+    <!-- Sign in / Sign out -->
+    <string name="welcome" translation_description="Text shown instead of the user's name when the user is not signed in.">Welcome!</string>
+    <string name="a11y_signed_in_content_description" translation_description="Description of the account header when the user is signed in.">Signed in as %s.</string>
+    <string name="a11y_signed_out_content_description" translation_description="Description of the account header when the user is not signed in.">Tap to sign in.</string>
 
 
 </resources>
+
+    <!--  keytool -list -v -keystore /Users/danalboteanu/AndroidStudioProjects/upload_key_2.jks
+  SHA256 4E:0E:24:A3:68:96:C8:07:0C:C5:FE:6D:6D:2D:98:EA:A6:2A:2E:9D:9E:5D:3F:44:42:E6:A4:81:90:89:A9:F5
+
+    https://digitalassetlinks.googleapis.com/v1/statements:list?
+    source.web.site=https://groupmap-6b346.web.app:optional_port&
+    relation=delegate_permission/common.handle_all_urls
+
+    https://groupmap-6b346.web.app/.well-known/assetlinks.json
+
+    -->

@@ -15,6 +15,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.craiovadata.groupmap.viewmodel.UserDisplay
+import com.craiovadata.groupmap.viewmodel.UserMapDisplay
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -27,34 +28,9 @@ import com.google.firebase.firestore.QueryDocumentSnapshot
 import java.lang.IllegalStateException
 
 object MapUtils {
+    const val LOCATION_RECEIVED = 2
 
-    // Check location permission is granted - if it is, start
-    // the service, otherwise request the permission
-    fun checkOrAskLocationPermission(activity: Activity, callback: () -> Unit) {
-        // Check GPS is enabled
-        val lm = activity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        if (!lm.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-//            Toast.makeText(this, "Please enable location services", Toast.LENGTH_SHORT).show()
-            Util.buildAlertMessageNoGps(activity)
-            return
-        }
-
-        // Check location permission is granted - if it is, start
-        // the service, otherwise request the permission
-        val permission = ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION)
-        if (permission == PackageManager.PERMISSION_GRANTED) {
-            callback.invoke()
-        } else {
-            // callback will be inside the activity
-            ActivityCompat.requestPermissions(
-                activity,
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                PERMISSIONS_REQUEST_AND_ZOOM_ME
-            )
-        }
-    }
-
-    fun requestMyGpsLocation(context: Context, callback: (location: Location) -> Unit) {
+    fun requestMyGpsLocation(context: Context, callback: (state: Int, location: Location?) -> Unit) {
         val request = LocationRequest()
 //        request.interval = 10000
 //        request.fastestInterval = 5000
@@ -64,21 +40,25 @@ object MapUtils {
 //        val path = getString(R.string.firebase_path) + "/" + getString(R.string.transport_id)
         val permission = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
         if (permission == PackageManager.PERMISSION_GRANTED) {
+            callback.invoke(PackageManager.PERMISSION_GRANTED, null)
             // Request location updates and when an update is
             // received, store the location in Firebase
             client.requestLocationUpdates(request, object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult?) {
                     val location = locationResult?.lastLocation
-                    if (location != null)
-                        callback.invoke(location)
+//                    if (location != null)
+                    callback.invoke(LOCATION_RECEIVED, location)
                 }
             }, null)
+        } else {
+            callback.invoke(PackageManager.PERMISSION_DENIED, null)
         }
     }
 
     @SuppressLint("MissingPermission")
     fun zoomOnMe(activity: Activity, map: GoogleMap?) {
-        requestMyGpsLocation(activity) { location ->
+        requestMyGpsLocation(activity) {permissionGranted, location ->
+            if (location == null) return@requestMyGpsLocation
             val builder = LatLngBounds.Builder()
             builder.include(LatLng(location.latitude, location.longitude))
             map?.isMyLocationEnabled = true
@@ -126,10 +106,9 @@ object MapUtils {
                 e.printStackTrace()
             }
         }
-
     }
 
-    fun setMarkerIcon(context: Context, marker: Marker?, iconUrl: String?) {
+    private fun setMarkerIcon(context: Context, marker: Marker?, iconUrl: String?) {
         if (iconUrl == null) return
 
         Glide.with(context)
@@ -172,7 +151,7 @@ object MapUtils {
         return bmp
     }
 
-    fun getCameraBounds(users: List<UserDisplay>): LatLngBounds? {
+    fun getCameraBounds(users: List<UserMapDisplay>): LatLngBounds? {
         if (users.isNullOrEmpty()) return null
         val builder = LatLngBounds.Builder()
         users.forEach { user ->

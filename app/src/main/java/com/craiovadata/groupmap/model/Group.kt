@@ -16,12 +16,4 @@
 
 package com.craiovadata.groupmap.model
 
-import java.util.Date
-
-data class Group(
-//    val id: String,
-//    val role: Float,
-    val groupName: String,
-//    val locationTimestamp: Date
-    val shareKey: String?
-)
+data class Group(val name: String, val sk: String?)

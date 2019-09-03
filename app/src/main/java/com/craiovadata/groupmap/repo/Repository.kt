@@ -16,35 +16,54 @@
 
 package com.craiovadata.groupmap.repo
 
+import android.location.Location
 import androidx.lifecycle.LiveData
-import androidx.paging.PagedList
-import com.craiovadata.groupmap.model.User
+import com.craiovadata.groupmap.viewmodel.GroupSkDisplayQueryItem
 import com.google.common.util.concurrent.ListenableFuture
-import java.util.*
 import java.util.concurrent.TimeUnit
 
 interface Repository {
 
-    val allTickers: SortedSet<String>
+//    val allTickers: SortedSet<String>
 
     /**
      * Gets a LiveData object from this repo that reflects the current value of
-     * a single Stock, given by its groupId.
+     * a single Stock, given by its uid.
      */
     fun getGroupLiveData(groupId: String): LiveData<GroupOrException>
 
-    fun getUsersLiveData(groupId: String): LiveData<UsersQueryResults>
+    fun getMyGroupsLiveData(): LiveData<GroupsQueryResults>
+    fun getGroups(groupShareKey: String): LiveData<GroupsQueryResults>
 
-    fun getUserPagedListLiveData(pageSize: Int): LiveData<PagedList<QueryItemOrException<User>>>
+    fun getUsersLiveData(groupId: String): LiveData<UsersQueryResults>
+    fun getUsersMapLiveData(groupId: String): LiveData<UsersQueryResults>
 
     /**
      * Synchronizes one stock record so it's available to this repo while offline
      */
     fun syncGroup(groupId: String, timeout: Long, unit: TimeUnit): ListenableFuture<SyncResult>
 
+    fun requestPositionUpdates(groupId: String?)
+
+    fun setNewGroup(groupName: String, callback: (groupIdOrException: GroupIdOrException) -> Unit)
+
+    fun sendMyPosition(groupId: String, location: Location, callback: (successOrException: SuccessOrException) -> Unit)
+
+    fun deleteToken(sentUid: String)
+    fun exitGroup(groupId: String)
 
     enum class SyncResult {
         SUCCESS, UNKNOWN, FAILURE, TIMEOUT
     }
 
+    fun sendTokenToServer(token: String?)
+
+    fun joinGroup(group: GroupSkDisplayQueryItem?, callback: (se: SuccessOrException) -> Unit)
+    fun removeUserFromGroup(uid: String, groupId: String)
+
+    fun dissmissAsAdmin(uid: String, groupId: String)
+    fun makeGroupAdmin(uid: String, groupId: String)
+    fun changeGroupName(groupId: String, groupName: String)
+    fun setPauseLocationUpdates(groupId: String)
+    fun allowLocationUpdates(groupId: String)
 }
