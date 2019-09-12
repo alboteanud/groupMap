@@ -98,7 +98,6 @@ dependencies {
 //    implementation "com.google.dagger:dagger-android-support:$rootProject.dagger"
 //    kapt "com.google.dagger:dagger-compiler:$rootProject.dagger"
 //    kapt "com.google.dagger:dagger-android-processor:$rootProject.dagger"
-
 }
 
 // Add the following line to the bottom of the file:
