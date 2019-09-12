@@ -7,29 +7,22 @@ import androidx.lifecycle.ViewModel
 import com.craiovadata.groupmap.common.DataOrException
 import com.craiovadata.groupmap.model.Group
 import com.craiovadata.groupmap.repo.*
+import com.craiovadata.groupmap.tracker.TrackerService
+import com.google.firebase.auth.FirebaseAuth
+import org.koin.android.ext.android.inject
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
 
-class MyProfileViewModel : ViewModel(), KoinComponent {
-
+class EntryGroupViewModel : ViewModel(), KoinComponent {
     private val repository by inject<Repository>()
-
-    //    private var _groupLiveData = MutableLiveData<GroupSkDisplayOrException>()
+    private val auth by inject<FirebaseAuth>()
     private var groupLiveData: LiveData<GroupSkDisplayOrException>? = null
-    var textBtnJoin = MutableLiveData<String>()
 
-    private var _navigateToMap = MutableLiveData<SuccessOrException>()
-    val navigateToMap: LiveData<SuccessOrException> = _navigateToMap
+    private var _navigateToJoinActivity = MutableLiveData<Boolean>()
+    val navigateToJoinActivity: LiveData<Boolean> = _navigateToJoinActivity
 
-    private var _navigateToControlPanel = MutableLiveData<Boolean?>()
-    val navigateToControlPanel: LiveData<Boolean?> get() = _navigateToControlPanel
-
-    private var _showLoading = MutableLiveData<Boolean>()
-    val showLoading: LiveData<Boolean?> get() = _showLoading
-
-
-    fun onNavToControlPanel() {
-        _navigateToControlPanel.value = true
+    init {
+        _navigateToJoinActivity.value= true
     }
 
     fun getGroup(groupShareKey: String): LiveData<GroupSkDisplayOrException> {
@@ -45,14 +38,11 @@ class MyProfileViewModel : ViewModel(), KoinComponent {
                         val queryItem = results.data[0]
                         GroupSkDisplayQueryItem(queryItem)
                     } else {
-                        if (exception == null) exception = java.lang.Exception("group was null or empty")
+                        if (exception == null) exception =
+                            java.lang.Exception("group was null or empty")
                         null
                     }
-                if (groupDisplay != null) {
-                    textBtnJoin.value = "Join \"${groupDisplay.item.groupName}\" group"
-                } else {
-                    // todo hide btn join
-                }
+
                 GroupSkDisplayOrException(groupDisplay, exception)
             }
             groupLiveData = liveData
@@ -60,19 +50,21 @@ class MyProfileViewModel : ViewModel(), KoinComponent {
         return liveData!!
     }
 
-    fun doneNavigatingToMap() {
-        _navigateToMap.value = null
+
+    fun doneNavigatingToJoinActivity() {
+//        groupLiveData = null
+        _navigateToJoinActivity.value = null
     }
 
-    fun doneNavigatingToControlPanel() {
-        _navigateToControlPanel.value = null
+    fun canNavigaitToJoin(): Boolean {
+        return _navigateToJoinActivity.value == true
     }
 
 }
 
-typealias GroupSkDisplayOrException_ = DataOrException<GroupSkDisplayQueryItem_, Exception>
+typealias GroupSkDisplayOrException = DataOrException<GroupSkDisplayQueryItem, Exception>
 
-data class GroupSkDisplayQueryItem_(private val _item: QueryItem<Group>) : QueryItem<GroupDisplay> {
+data class GroupSkDisplayQueryItem(private val _item: QueryItem<Group>) : QueryItem<GroupDisplay> {
     private val convertedGroup = _item.item.toGroupDisplay()
 
     override val item: GroupDisplay

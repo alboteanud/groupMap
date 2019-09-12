@@ -17,7 +17,6 @@
 package com.craiovadata.groupmap.repo.firestore
 
 import android.location.Location
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
@@ -26,9 +25,7 @@ import com.craiovadata.groupmap.livedata.firestore.FirestoreDocumentLiveData
 import com.craiovadata.groupmap.livedata.firestore.FirestoreQueryLiveData
 import com.craiovadata.groupmap.model.Group
 import com.craiovadata.groupmap.repo.*
-import com.craiovadata.groupmap.utils_.*
-import com.craiovadata.groupmap.viewmodel.GroupSkDisplayQueryItem
-import com.google.android.gms.common.api.Batch
+import com.craiovadata.groupmap.util.*
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.google.firebase.Timestamp
@@ -38,7 +35,6 @@ import com.google.firebase.iid.FirebaseInstanceId
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
 import timber.log.Timber
-import java.lang.Exception
 import java.lang.System.currentTimeMillis
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -92,7 +88,7 @@ class FirestoreRepository : Repository, KoinComponent {
 
     override fun getUsersMapLiveData(groupId: String): LiveData<UsersQueryResults> {
         val refUsersCollection = groupsLiveCollection.document(groupId).collection(USERS)
-        val delay = TimeUnit.HOURS.toMillis(24)
+        val delay = TimeUnit.HOURS.toMillis(3)
         val someTimeAgo = Date(currentTimeMillis() - delay)
         // query for recently updated users
         val query = refUsersCollection
@@ -235,12 +231,10 @@ class FirestoreRepository : Repository, KoinComponent {
     }
 
     override fun joinGroup(
-        group: GroupSkDisplayQueryItem?,
+        groupId: String, groupName: String,
         callback: (se: SuccessOrException) -> Unit
     ) {
         val uid = auth.uid ?: return
-        val groupId = group?.id ?: return
-        val groupName = group.item.groupName
         db.document("$USERS/$uid/$GROUPS/$groupId")
             .set(hashMapOf(NAME to groupName)) // will trigger a cloud function(3) to update the Group with userData
             .addOnCompleteListener {

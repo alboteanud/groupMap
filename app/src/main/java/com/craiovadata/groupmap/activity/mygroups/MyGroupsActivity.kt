@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.craiovadata.groupmap.R
@@ -12,10 +13,11 @@ import com.craiovadata.groupmap.activity.base.BaseActivity
 import com.craiovadata.groupmap.activity.map.MapActivity
 import com.craiovadata.groupmap.activity.creategroup.CreateGroupActivity
 import com.craiovadata.groupmap.signin.setupProfileMenuItem
-import com.craiovadata.groupmap.utils_.Util
 import com.craiovadata.groupmap.viewmodel.GroupDisplayQueryResults
 import com.craiovadata.groupmap.viewmodel.MyGroupsViewModel
 import com.firebase.ui.auth.AuthUI
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
 import kotlinx.android.synthetic.main.activity_my_groups.*
 import kotlinx.android.synthetic.main.content_my_groups.*
 import timber.log.Timber
@@ -33,6 +35,39 @@ class MyGroupsActivity : BaseActivity() {
             startActivity(Intent(this, CreateGroupActivity::class.java))
         }
 
+        checkGooglePlayServices()
+
+    }
+
+    private fun checkGooglePlayServices() {
+        val statusServices = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
+        // success == 0
+        when (statusServices) {
+            ConnectionResult.SERVICE_MISSING -> {
+                Toast.makeText(this, "Google Play SERVICE_MISSING", Toast.LENGTH_SHORT).show()
+                GoogleApiAvailability.getInstance().makeGooglePlayServicesAvailable(this)
+            }
+            ConnectionResult.SERVICE_UPDATING -> {
+                Toast.makeText(this, "Google Play SERVICE_UPDATING", Toast.LENGTH_SHORT).show()
+            }
+            ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED -> {
+                Toast.makeText(
+                    this,
+                    "Google Play SERVICE_VERSION_UPDATE_REQUIRED",
+                    Toast.LENGTH_SHORT
+                ).show()
+                GoogleApiAvailability.getInstance().makeGooglePlayServicesAvailable(this)
+            }
+            ConnectionResult.SERVICE_DISABLED -> {
+                Toast.makeText(this, "Google Play SERVICE_DISABLED", Toast.LENGTH_SHORT).show()
+                GoogleApiAvailability.getInstance().makeGooglePlayServicesAvailable(this)
+            }
+            ConnectionResult.SERVICE_INVALID -> {
+                Toast.makeText(this, "Google Play SERVICE_INVALID", Toast.LENGTH_SHORT).show()
+                GoogleApiAvailability.getInstance().makeGooglePlayServicesAvailable(this)
+            }
+
+        }
     }
 
     private var viewModel: MyGroupsViewModel? = null
@@ -69,8 +104,6 @@ class MyGroupsActivity : BaseActivity() {
             val groupsLiveData = viewModel!!.getGroups(uid)
             groupsLiveData.observe(this@MyGroupsActivity, groupsObserver)
 
-
-
             adapter = listAdapter
         }
     }
@@ -102,7 +135,8 @@ class MyGroupsActivity : BaseActivity() {
                 return true
             }
             R.id.menu_privacy_policy -> {
-                Util.goToPrivacyPolicy(this)
+               goToPrivacyPolicy(item.actionView)
+//                startService(Intent(this, MyMessagingService::class.java))
                 return true
             }
             else -> super.onOptionsItemSelected(item)

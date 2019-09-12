@@ -10,8 +10,14 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/menu_item_add_participants"
+        android:title="@string/action_invite" />
+
+    <item
         android:id="@+id/menu_item_group_info"
         android:title="@string/action_group_info" />
+
+
 
     <item
         android:id="@+id/menu_item_pause_location"

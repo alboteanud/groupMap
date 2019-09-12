@@ -1,7 +1,8 @@
-package com.craiovadata.groupmap.utils_
+package com.craiovadata.groupmap.util
 
 const val GROUP_ID = "groupId"
 const val EXTRA_GROUP_ID = "extra_group_id"
+const val EXTRA_GROUP_NAME = "extra_group_name"
 
 const val GROUPS = "groups"
 const val DEFAULT_GROUP = "demo"

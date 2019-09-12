@@ -1,4 +1,4 @@
-package com.craiovadata.groupmap.utils_
+package com.craiovadata.groupmap.util
 
 import com.craiovadata.groupmap.model.Group
 import com.google.android.gms.tasks.Task

@@ -1,4 +1,4 @@
-package com.craiovadata.groupmap.utils_
+package com.craiovadata.groupmap.util
 
 
 import com.bumptech.glide.annotation.GlideModule

@@ -1,10 +1,8 @@
-package com.craiovadata.groupmap.utils_
+package com.craiovadata.groupmap.util
 
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
@@ -13,13 +11,7 @@ import com.craiovadata.groupmap.BuildConfig
 import com.craiovadata.groupmap.R
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.iid.FirebaseInstanceId
 import android.util.DisplayMetrics
-import android.view.View
-import androidx.core.content.ContextCompat.startActivity
-import com.craiovadata.groupmap.model.Group
 import com.craiovadata.groupmap.viewmodel.GroupDisplay
 import com.firebase.ui.auth.AuthUI
 
@@ -117,17 +109,7 @@ object Util {
     */
 
 
-    fun goToPrivacyPolicy(context: Context) {
-        val myLink = Uri.parse(context.getString(R.string.privacy_link))
-        val intent = Intent(Intent.ACTION_VIEW, myLink)
-        val activities: List<ResolveInfo> = context.packageManager.queryIntentActivities(
-            intent,
-            PackageManager.MATCH_DEFAULT_ONLY
-        )
-        val isIntentSafe: Boolean = activities.isNotEmpty()
-        if (isIntentSafe)
-            context.startActivity(intent)
-    }
+
 
 
     fun startActionShare(context: Context, group: GroupDisplay?) {

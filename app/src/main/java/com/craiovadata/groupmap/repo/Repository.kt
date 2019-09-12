@@ -58,7 +58,7 @@ interface Repository {
 
     fun sendTokenToServer(token: String?)
 
-    fun joinGroup(group: GroupSkDisplayQueryItem?, callback: (se: SuccessOrException) -> Unit)
+    fun joinGroup(groupId: String, groupName: String, callback: (se: SuccessOrException) -> Unit)
     fun removeUserFromGroup(uid: String, groupId: String)
 
     fun dissmissAsAdmin(uid: String, groupId: String)

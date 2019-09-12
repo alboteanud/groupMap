@@ -41,47 +41,59 @@
             android:layout_height="match_parent"
             app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
+            <TextView
+                android:id="@+id/textViewGroupName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Join group ?"
+                app:layout_constraintBottom_toTopOf="@+id/btn_join_group"
+                app:layout_constraintEnd_toEndOf="@+id/btn_join_group"
+                app:layout_constraintStart_toStartOf="@+id/btn_join_group"
+                android:layout_marginBottom="16dp"
+                android:textSize="20sp">
+
+            </TextView>
 
             <Button
                 android:id="@+id/btn_join_group"
-                android:layout_width="@dimen/btn_width"
-                android:layout_height="@dimen/btn_height"
-                android:onClick="@{() -> joinGroupViewModel.onJoin()}"
-                android:text="@{joinGroupViewModel.textBtnJoin}"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="OK"
                 android:enabled="@{!joinGroupViewModel.showLoading}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="Join group" />
+                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                 android:id="@+id/btn_skip"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="16dp"
                 android:background="?android:attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_vertical"
                 android:minHeight="48dp"
-                android:onClick="@{() -> joinGroupViewModel.onNavToControlPanel()}"
+                android:onClick="@{() -> joinGroupViewModel.onNavToMyGroups()}"
                 android:padding="8dp"
                 android:text="Skip"
+                app:layout_constraintBottom_toTopOf="@+id/include"
                 app:layout_constraintEnd_toEndOf="@+id/btn_join_group"
                 app:layout_constraintStart_toStartOf="@+id/btn_join_group"
                 app:layout_constraintTop_toBottomOf="@+id/btn_join_group" />
 
 
             <include
+                android:id="@+id/include"
                 layout="@layout/privacy"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent" />
+                app:layout_constraintStart_toStartOf="parent"
+                />
 
             <ProgressBar
                 android:id="@+id/progressBar"

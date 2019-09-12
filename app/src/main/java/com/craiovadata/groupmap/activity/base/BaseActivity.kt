@@ -1,18 +1,13 @@
 package com.craiovadata.groupmap.activity.base
 
-import android.Manifest
-import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.location.LocationManager
+import android.content.pm.ResolveInfo
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.view.View
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.craiovadata.groupmap.R
 import com.craiovadata.groupmap.activity.entry.EntryActivity
-import com.craiovadata.groupmap.utils_.PERMISSIONS_REQUEST
-import com.craiovadata.groupmap.utils_.Util
-import com.google.android.gms.maps.GoogleMap
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import org.koin.android.ext.android.inject
@@ -54,6 +49,18 @@ open class BaseActivity : AppCompatActivity() {
         if (this !is EntryActivity) {
             EntryActivity.startEntryActivityNewTask(this)
         }
+    }
+
+    fun goToPrivacyPolicy(view: View) {
+        val myLink = Uri.parse(getString(R.string.privacy_link))
+        val intent = Intent(Intent.ACTION_VIEW, myLink)
+        val activities: List<ResolveInfo> = packageManager.queryIntentActivities(
+            intent,
+            PackageManager.MATCH_DEFAULT_ONLY
+        )
+        val isIntentSafe: Boolean = activities.isNotEmpty()
+        if (isIntentSafe)
+            startActivity(intent)
     }
 
 }

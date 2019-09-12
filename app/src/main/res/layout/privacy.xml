@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/btn_privacy"
+    android:id="@+id/buttonPrivacyPolicy"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:background="?android:attr/selectableItemBackground"
@@ -9,7 +9,9 @@
     android:minHeight="48dp"
     android:layout_gravity="center_horizontal"
     android:orientation="horizontal"
-    android:padding="8dp">
+    android:padding="8dp"
+
+    android:onClick="goToPrivacyPolicy">
 
         <ImageView
             android:id="@+id/imageView"
@@ -18,13 +20,13 @@
             android:layout_gravity="center_vertical"
             android:layout_marginEnd="8dp"
             android:src="@drawable/ic_privacy"
-            android:contentDescription="terms and privacy link"/>
+            android:contentDescription="check out privacy policy"/>
 
         <TextView
             android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Terms and Privacy Policy"
+            android:text="Privacy Policy"
             android:textSize="13sp"
             android:layout_gravity="center_vertical"/>
 

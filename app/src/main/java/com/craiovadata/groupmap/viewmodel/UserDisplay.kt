@@ -7,7 +7,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.Glide
 import androidx.databinding.BindingAdapter
 import com.craiovadata.groupmap.R
-import com.craiovadata.groupmap.utils_.ROLE_ADMIN
+import com.craiovadata.groupmap.util.ROLE_ADMIN
 
 
 /**
@@ -23,9 +23,11 @@ data class UserDisplay(
     }
 }
 
-@BindingAdapter("app:profileImageI")
+@BindingAdapter("app:profileImg")
 fun loadImage(view: ImageView, imageUrl: String?) {
-    Glide.with(view.getContext())
+    if (imageUrl==null)
+        return
+    Glide.with(view.context)
         .load(imageUrl).apply(RequestOptions().circleCrop())
         .placeholder(R.drawable.ic_face)
         .into(view)

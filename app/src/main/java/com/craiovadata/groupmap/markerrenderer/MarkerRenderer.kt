@@ -12,7 +12,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.craiovadata.groupmap.R
-import com.craiovadata.groupmap.utils_.MultiDrawable
+import com.craiovadata.groupmap.util.MultiDrawable
 import com.craiovadata.groupmap.viewmodel.UserMapDisplay
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.BitmapDescriptorFactory

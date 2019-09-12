@@ -1,8 +1,7 @@
-package com.craiovadata.groupmap.utils_
+package com.craiovadata.groupmap.util
 
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
-import com.craiovadata.groupmap.activity.entry.EntryActivity
 
 object PrefUtils {
     private const val PREF_KEY_FIRST_START = "pref_key_first_start"

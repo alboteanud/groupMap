@@ -30,7 +30,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.Target
 import com.craiovadata.groupmap.R
-import com.craiovadata.groupmap.utils_.asGlideTarget
+import com.craiovadata.groupmap.util.asGlideTarget
 import com.craiovadata.groupmap.viewmodel.MyGroupsViewModel
 
 fun Toolbar.setupProfileMenuItem(

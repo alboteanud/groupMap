@@ -5,7 +5,7 @@
     <string name="title_activity_group_info">Group info</string>
     <string name="title_activity_create_group">New group</string>
     <string name="title_activity_entry">Welcome to Group Map</string>
-    <string name="title_activity_share_key">Check out group</string>
+    <string name="title_activity_share_key">Join group</string>
     <string name="title_activity_control_panel">Control panel</string>
     <string name="title_activity_new_group">New group</string>
     <string name="title_activity_my_groups">My groups</string>
@@ -17,7 +17,8 @@
     <string name="action_invite">Invite members</string>
 
     <string name="label_group_name">Group name</string>
-    <string name="buttonTextCreateGroup">Create group</string>
+    <string name="label_join_group_name">Join group \"%s\" ?</string>
+    <string name="buttonTextCreateGroup">Create</string>
 
     <string name="toast_group_created_success">The group was created</string>
     <string name="toast_group_creation_error">Error creating the group</string>

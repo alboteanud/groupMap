@@ -7,7 +7,7 @@ import android.view.View.VISIBLE
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.craiovadata.groupmap.R
-import com.craiovadata.groupmap.utils_.*
+import com.craiovadata.groupmap.util.*
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.Query
 import kotlinx.android.synthetic.main.member_list_item.view.*

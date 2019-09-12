@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.craiovadata.groupmap.utils_
+package com.craiovadata.groupmap.util
 
 import android.graphics.drawable.Drawable
 import android.view.MenuItem

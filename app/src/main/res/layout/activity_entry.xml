@@ -44,19 +44,20 @@
             <Button
                 android:id="@+id/btn_demo"
                 android:layout_width="@dimen/btn_width"
-                android:layout_height="@dimen/btn_height"
+                android:layout_height="wrap_content"
                 android:text="Demo" />
+
 
             <Button
                 android:id="@+id/btn_log_in"
                 android:layout_width="@dimen/btn_width"
-                android:layout_height="@dimen/btn_height"
+                android:layout_height="wrap_content"
                 android:text="@string/label_log_in" />
 
             <Button
                 android:id="@+id/btn_log_out"
                 android:layout_width="@dimen/btn_width"
-                android:layout_height="@dimen/btn_height"
+                android:layout_height="wrap_content"
                 android:text="@string/label_log_out" />
 
             <View

@@ -8,14 +8,13 @@ import com.craiovadata.groupmap.model.User
 import com.craiovadata.groupmap.viewmodel.Formatters.timeFormatter
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.clustering.ClusterItem
-import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.Glide
 import androidx.databinding.BindingAdapter
 import com.craiovadata.groupmap.R
-import com.craiovadata.groupmap.utils_.ROLE_ADMIN
+import com.craiovadata.groupmap.util.ROLE_ADMIN
 import java.util.concurrent.TimeUnit
 
 
@@ -61,8 +60,8 @@ data class UserMapDisplay(
     }
 }
 
-@BindingAdapter("app:profileImage")
-fun loadProfileImage(view: ImageView, imageUrl: String?) {
+@BindingAdapter("app:profileImageMap")
+fun loadImage2(view: ImageView, imageUrl: String?) {
     Glide.with(view.context)
         .load(imageUrl).apply(RequestOptions().circleCrop())
         .placeholder(R.drawable.ic_face)

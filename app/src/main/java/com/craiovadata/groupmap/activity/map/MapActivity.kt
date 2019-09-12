@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Bundle
+import android.os.Handler
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
@@ -19,9 +20,10 @@ import com.craiovadata.groupmap.activity.groupinfo.GroupInfoActivity
 import com.craiovadata.groupmap.markerrenderer.MarkerRenderer
 import com.craiovadata.groupmap.repo.QueryItem
 import com.craiovadata.groupmap.tracker.TrackerService
-import com.craiovadata.groupmap.utils_.*
-import com.craiovadata.groupmap.utils_.MapUtils.getCameraBounds
-import com.craiovadata.groupmap.utils_.Util.convertDpToPixel
+import com.craiovadata.groupmap.util.*
+import com.craiovadata.groupmap.util.MapUtils.getCameraBounds
+import com.craiovadata.groupmap.util.Util.convertDpToPixel
+import com.craiovadata.groupmap.util.Util.startActionShare
 import com.craiovadata.groupmap.viewmodel.GroupDisplay
 import com.craiovadata.groupmap.viewmodel.MapViewModel
 import com.craiovadata.groupmap.viewmodel.UserMapDisplay
@@ -47,6 +49,7 @@ class MapActivity : BaseActivity(), OnMapReadyCallback,
     private var usersWithLocation: List<UserMapDisplay> = listOf()
     private var isPauseLocation = false
     private var padding = -1
+    private var isAdmin = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,7 +69,12 @@ class MapActivity : BaseActivity(), OnMapReadyCallback,
     override fun onRestart() {
         super.onRestart()
         viewModel?.requestPositionUpdate(groupId)
-        startService(TrackerService.newIntent(this, groupId!!))
+        sendMyPosition()
+    }
+
+    private fun sendMyPosition() {
+        if (groupId == null) return
+        startService(TrackerService.newIntent(this, groupId!!, null))
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -74,7 +82,7 @@ class MapActivity : BaseActivity(), OnMapReadyCallback,
         setUpMap()
         setUpObservers()
         viewModel?.requestPositionUpdate(groupId)
-        startService(TrackerService.newIntent(this, groupId!!))
+        sendMyPosition()
     }
 
     private fun setUpObservers() {
@@ -100,8 +108,13 @@ class MapActivity : BaseActivity(), OnMapReadyCallback,
                     if (!data.isNullOrEmpty()) {
                         showUsersOnMap(data)
                         if (padding == -1) {
-                            padding = convertDpToPixel(40 * resources.displayMetrics.density, this)
-                            boundUsersOnMap()
+                            padding = convertDpToPixel(
+                                paddingMap * resources.displayMetrics.density,
+                                this
+                            )
+                            Handler().postDelayed({
+                                boundUsersOnMap()
+                            }, 3000)
                         }
                     } else if (queryResults.exception != null) {
                         Timber.e(queryResults.exception, "Error getting users")
@@ -111,6 +124,7 @@ class MapActivity : BaseActivity(), OnMapReadyCallback,
             })
 
         viewModel!!.isAdmin.observe(this, Observer {
+            isAdmin = it
             invalidateOptionsMenu()
         })
         viewModel!!.isPauseLocation.observe(this, Observer {
@@ -203,7 +217,10 @@ class MapActivity : BaseActivity(), OnMapReadyCallback,
             // callback will be inside the activity's onRequestPermissionsResult(
             ActivityCompat.requestPermissions(
                 this,
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ),
                 PERMISSIONS_REQUEST
             )
         }
@@ -222,7 +239,6 @@ class MapActivity : BaseActivity(), OnMapReadyCallback,
             builder.include(item.position)
         }
         val bounds = builder.build()
-        val padding = convertDpToPixel(40 * resources.displayMetrics.density, this)
         try {
             mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding))
         } catch (e: Exception) {
@@ -244,11 +260,11 @@ class MapActivity : BaseActivity(), OnMapReadyCallback,
     }
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-
         menu?.findItem(R.id.menu_item_group_info)?.isVisible = !isDemo()
         menu?.findItem(R.id.menu_item_exit)?.isVisible = !isDemo()
-        menu?.findItem(R.id.menu_item_enable_location)?.isVisible = isPauseLocation
-        menu?.findItem(R.id.menu_item_pause_location)?.isVisible = !isPauseLocation
+        menu?.findItem(R.id.menu_item_enable_location)?.isVisible = isPauseLocation && !isDemo()
+        menu?.findItem(R.id.menu_item_pause_location)?.isVisible = !isPauseLocation && !isDemo()
+        menu?.findItem(R.id.menu_item_add_participants)?.isVisible = isAdmin
         return super.onPrepareOptionsMenu(menu)
     }
 
@@ -260,6 +276,10 @@ class MapActivity : BaseActivity(), OnMapReadyCallback,
         return when (item.itemId) {
             R.id.menu_item_bound_users -> {
                 boundUsersOnMap()
+                return true
+            }
+            R.id.menu_item_add_participants -> {
+                startActionShare(this, groupData)
                 return true
             }
             R.id.menu_item_group_info -> {
@@ -299,6 +319,8 @@ class MapActivity : BaseActivity(), OnMapReadyCallback,
     }
 
     companion object {
+
+        const val paddingMap = 30
 
         fun newIntent(context: Context, groupId: String): Intent {
             val intent = Intent(context, MapActivity::class.java)

@@ -25,23 +25,25 @@ buildscript {
         arcoreVersion = '1.7.0'
         browserVersion = '1.0.0'
         constraintLayoutVersion = '1.1.3'
-        coreVersion = '1.2.0-alpha02'
+        coreVersion = '1.2.0-alpha03'
         crashlyticsVersion = '2.9.8'
         dagger = "2.16"
         dataBindingCompilerVersion = '3.0.1'
         drawerLayoutVersion = '1.1.0-alpha02'
         espressoVersion = '3.1.1'
         fabricVersion = '1.25.4'
-        firebaseAuthVersion = '18.1.0'
+        firebaseAuthVersion = '19.0.0'
+        firebaseAuthUiVersion = '5.0.0'
         firebaseConfigVersion = '18.0.0'
-        firebaseCoreVersion = '17.0.1'
-        firebaseFirestoreVersion = '20.2.0'
-        firebaseFunctionsVersion = '18.1.0'
-        firebaseMessagingVersion = '19.0.1'
-        firebaseUiVersion = "4.0.0"
+        firebaseCoreVersion = '17.2.0'
+        firebaseFirestoreVersion = '21.0.0'
+        firebaseFunctionsVersion = '19.0.1'
+        firebaseMessagingVersion = '20.0.0'
+        firebaseUiVersion = "4.3.1"
+        firebaseAnaliticsVersion ="17.2.0"
         flexboxVersion = "1.1.0"
         fragmentVersion = "1.1.0-beta01"
-        glideVersion = "4.6.1"
+        glideVersion = "4.9.0"
         googleMapUtilsVersion = "0.5"
         googlePlayServicesMapsVersion = '16.0.0'
         googlePlayServicesVisionVersion = '17.0.2'
@@ -49,7 +51,8 @@ buildscript {
         gsonVersion = "2.8.1"
         hamcrestVersion = '1.3'
         junitVersion = '4.12'
-        kotlinVersion = '1.3.41'
+        kotlinVersion = '1.3.50'
+        koinVersion =  '1.0.2' //'2.0.1'
         ktxVersion = "1.0.0"
         leanbackVersion = '1.0.0'
         legacySupportVersion = '1.0.0'
@@ -85,8 +88,8 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:3.5.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-        classpath 'com.google.gms:google-services:4.3.1'
         classpath 'io.fabric.tools:gradle:1.31.0'
+        classpath 'com.google.gms:google-services:4.3.1'  // Google Services plugin
 //        classpath 'com.google.firebase:perf-plugin:1.3.1'  // problems with glide because of perf
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files

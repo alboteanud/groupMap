@@ -1,4 +1,4 @@
-package com.craiovadata.groupmap.utils_
+package com.craiovadata.groupmap.util
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -8,13 +8,10 @@ import android.content.pm.PackageManager
 import android.graphics.*
 import android.graphics.drawable.Drawable
 import android.location.Location
-import android.location.LocationManager
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
-import com.craiovadata.groupmap.viewmodel.UserDisplay
 import com.craiovadata.groupmap.viewmodel.UserMapDisplay
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest

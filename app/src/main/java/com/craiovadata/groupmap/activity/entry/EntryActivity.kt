@@ -5,6 +5,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.core.view.isVisible
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
 import com.android.installreferrer.api.ReferrerDetails
@@ -14,10 +16,11 @@ import com.craiovadata.groupmap.activity.map.MapActivity
 import com.craiovadata.groupmap.activity.mygroups.MyGroupsActivity
 import com.craiovadata.groupmap.activity.join.JoinGroupActivity
 import com.craiovadata.groupmap.repo.Repository
-import com.craiovadata.groupmap.utils_.*
-import com.craiovadata.groupmap.utils_.PrefUtils.isFirstStart
-import com.craiovadata.groupmap.utils_.PrefUtils.revokeFirstStart
-import com.craiovadata.groupmap.utils_.Util.showLoginScreen
+import com.craiovadata.groupmap.util.*
+import com.craiovadata.groupmap.util.PrefUtils.isFirstStart
+import com.craiovadata.groupmap.util.PrefUtils.revokeFirstStart
+import com.craiovadata.groupmap.util.Util.showLoginScreen
+import com.craiovadata.groupmap.viewmodel.*
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.ErrorCodes
 import com.firebase.ui.auth.IdpResponse
@@ -26,22 +29,49 @@ import org.koin.android.ext.android.inject
 import timber.log.Timber
 
 class EntryActivity : BaseActivity(), View.OnClickListener {
-    private var groupShareKey: String? = null
+    //    private var groupShareKey: String? = null
+    private var groupData: GroupSkDisplayQueryItem? = null
+    private lateinit var viewModel: EntryGroupViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // check if case is - second Start loggedIn
-        val loggedIn = auth.currentUser != null
-        if (loggedIn) {
-            checkAppLinkIntent()?.let { shareKey ->
-                navigateToJoinActivity(shareKey)
-                return
-            }
-        }     // not the case. Continue
-
-        findShareKey()
+        viewModel = ViewModelProviders.of(this).get(EntryGroupViewModel::class.java)
+        verifyAndNavigate()
         initViews()
+
+    }
+
+    private fun verifyAndNavigate() {
+        findShareKey { groupShareKey ->
+
+            val groupLiveData = viewModel.getGroup(groupShareKey)
+            groupLiveData.observe(this, Observer {
+                it.data?.let { data ->
+                    val loggedIn = auth.currentUser != null
+                    if (loggedIn) {
+                        if (viewModel.canNavigaitToJoin()){
+                            viewModel.doneNavigatingToJoinActivity()
+                            goToJoinActivity(data)
+                        }
+
+                    } else {
+                        groupData = data
+                    }
+                }
+            })
+
+            viewModel.navigateToJoinActivity.observe(this, Observer{
+
+            })
+        }
+    }
+
+    private fun goToJoinActivity(groupData: GroupSkDisplayQueryItem) {
+        val groupId = groupData.id
+        val groupName = groupData.item.groupName
+        val intent = JoinGroupActivity.newIntent(this, groupId, groupName)
+        startActivity(intent)
+//        finish()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -52,12 +82,11 @@ class EntryActivity : BaseActivity(), View.OnClickListener {
 //                snack("Signed in")
                 val repository by inject<Repository>()
                 repository.sendTokenToServer(null)
-                if (groupShareKey != null) {
-                    navigateToJoinActivity(groupShareKey!!)
+                if (groupData != null) {
+                    goToJoinActivity(groupData!!)
                 } else {
-//                    startActivity(Intent(this, ControlPanelActivity::class.java))
                     startActivity(Intent(this, MyGroupsActivity::class.java))
-                    finish()
+//                    finish()
                 }
             } else {
                 // Sign in failed
@@ -92,9 +121,9 @@ class EntryActivity : BaseActivity(), View.OnClickListener {
         }
     }
 
-   override fun onLogin(){
+    override fun onLogin() {
         super.onLogin()
-       updateUI(true)
+        updateUI(true)
     }
 
     override fun onLogout() {
@@ -102,18 +131,20 @@ class EntryActivity : BaseActivity(), View.OnClickListener {
         updateUI(false)
     }
 
-    private fun updateUI(loggedIn: Boolean){
+    private fun updateUI(loggedIn: Boolean) {
         btn_log_in?.isVisible = !loggedIn
         btn_log_out?.isVisible = loggedIn
     }
 
-    private fun findShareKey() {
-        groupShareKey = checkAppLinkIntent()
-        if (groupShareKey == null) {
+    private fun findShareKey(callback: (shareKey: String) -> Unit) {
+        val appLinkShareKey: String? = checkAppLinkIntent()
+        if (appLinkShareKey != null) {
+            callback.invoke(appLinkShareKey)
+        } else {
             if (isFirstStart(this)) {
                 revokeFirstStart(this)
-                checkInstallRefferer { shareKey ->
-                    groupShareKey = shareKey
+                checkInstallRefferer {
+                    callback(it)
                 }
             }
         }
@@ -145,12 +176,6 @@ class EntryActivity : BaseActivity(), View.OnClickListener {
         })
     }
 
-    private fun navigateToJoinActivity(groupShareKey: String) {
-        val intent = JoinGroupActivity.newIntent(this, groupShareKey)
-        startActivity(intent)
-        finish()
-    }
-
     private fun checkAppLinkIntent(): String? {
         val appLinkData = intent.data
         appLinkData?.let {
@@ -166,21 +191,12 @@ class EntryActivity : BaseActivity(), View.OnClickListener {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         setIntent(intent)
-        checkAppLinkIntent()?.let { shareKey ->
-            val loggedIn = auth.currentUser != null
-            if (loggedIn) {     // check if - second Start
-                navigateToJoinActivity(shareKey)
-            } else {        // store for later login
-                groupShareKey = shareKey
-            }
-        }
+        verifyAndNavigate()
     }
-
-
 
     companion object {
 
-        fun startEntryActivityNewTask(activity:Activity){
+        fun startEntryActivityNewTask(activity: Activity) {
             val intent = Intent(activity, EntryActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
             activity.startActivity(intent)

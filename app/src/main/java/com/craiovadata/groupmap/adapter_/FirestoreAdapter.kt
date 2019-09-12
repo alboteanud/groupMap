@@ -3,6 +3,7 @@ package com.craiovadata.groupmap.adapter_
 import android.util.Log
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.*
+import timber.log.Timber
 
 /**
  * RecyclerView adapter for displaying the results of a Firestore [Query].
@@ -21,7 +22,7 @@ abstract class FirestoreAdapter<VH : RecyclerView.ViewHolder>(private var query:
 
     override fun onEvent(documentSnapshots: QuerySnapshot?, e: FirebaseFirestoreException?) {
         if (e != null) {
-            Log.w(TAG, "onEvent:error", e)
+            Timber.e(e,"onEvent:error")
             onError(e)
             return
         }
@@ -31,7 +32,7 @@ abstract class FirestoreAdapter<VH : RecyclerView.ViewHolder>(private var query:
         }
 
         // Dispatch the event
-        Log.d(TAG, "onEvent:numChanges:" + documentSnapshots.documentChanges.size)
+        Timber.d("onEvent:numChanges:%s", documentSnapshots.documentChanges.size)
         for (change in documentSnapshots.documentChanges) {
             when (change.type) {
                 DocumentChange.Type.ADDED -> onDocumentAdded(change)
@@ -71,7 +72,7 @@ abstract class FirestoreAdapter<VH : RecyclerView.ViewHolder>(private var query:
     }
 
     open fun onError(e: FirebaseFirestoreException) {
-        Log.w(TAG, "onError", e)
+        Timber.e(e,"onError")
     }
 
     open fun onDataChanged() {}

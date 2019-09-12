@@ -17,9 +17,9 @@ import com.craiovadata.groupmap.R
 import com.craiovadata.groupmap.activity.base.BaseActivity
 import com.craiovadata.groupmap.adapter_.MemberAdapter
 import com.craiovadata.groupmap.databinding.ActivityGroupInfoBinding
-import com.craiovadata.groupmap.utils_.EXTRA_GROUP_ID
-import com.craiovadata.groupmap.utils_.GROUP_ID
-import com.craiovadata.groupmap.utils_.Util.startActionShare
+import com.craiovadata.groupmap.util.EXTRA_GROUP_ID
+import com.craiovadata.groupmap.util.GROUP_ID
+import com.craiovadata.groupmap.util.Util.startActionShare
 import com.craiovadata.groupmap.viewmodel.GroupDisplay
 import com.craiovadata.groupmap.viewmodel.GroupInfoViewModel
 import com.craiovadata.groupmap.viewmodel.MemberDisplayQueryResults

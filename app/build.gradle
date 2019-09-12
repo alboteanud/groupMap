@@ -1,7 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
-apply plugin: 'com.google.gms.google-services'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'io.fabric'
 
@@ -14,19 +13,25 @@ android {
             keyPassword '666666'
         }
     }
-    compileSdkVersion 28
+    compileSdkVersion rootProject.compileSdkVersion
     defaultConfig {
         applicationId 'com.craiovadata.groupmap'
-        minSdkVersion 23
-        targetSdkVersion 28
-        versionCode 34
-        versionName '3.4'
+        minSdkVersion 21
+        targetSdkVersion rootProject.targetSdkVersion
+        versionCode 38
+        versionName '3.8'
+        manifestPlaceholders = [crashlyticsEnabled: true]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
             minifyEnabled false
+            //       Need to ensure the app size has not increased
+            manifestPlaceholders = [crashlyticsEnabled: true]
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            manifestPlaceholders = [crashlyticsEnabled: false]
         }
     }
 
@@ -49,38 +54,44 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$rootProject.kotlinVersion"
 
-    implementation 'androidx.appcompat:appcompat:1.0.2'
-    implementation 'androidx.recyclerview:recyclerview:1.0.0'
-//    implementation 'com.google.android.material:material:1.0.0'
+    implementation "androidx.appcompat:appcompat:$rootProject.appcompatVersion"
+    implementation "androidx.recyclerview:recyclerview:1.0.0"
+//    implementation "com.google.android.material:material:1.0.0"
     implementation "com.google.android.material:material:$rootProject.materialVersion"
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    implementation "androidx.constraintlayout:constraintlayout:$rootProject.constraintLayoutVersion"
 
-    implementation 'androidx.core:core-ktx:1.0.2'
+    // Date and time API for Java.
+    implementation "com.jakewharton.threetenabp:threetenabp:$rootProject.threetenabpVersion"
+    testImplementation "org.threeten:threetenbp:$rootProject.threetenbpVersion"
+    implementation "androidx.core:core-ktx:$rootProject.ktxVersion"
+//    implementation "androidx.core:core-ktx:$rootProject.coreVersion"
 
-    implementation 'com.google.android.gms:play-services-maps:17.0.0'
-    implementation 'com.google.maps.android:android-maps-utils:0.5'
 
-    implementation 'com.google.firebase:firebase-auth:19.0.0'
-    implementation 'com.google.firebase:firebase-firestore:21.0.0'
-    implementation 'com.google.firebase:firebase-messaging:20.0.0'
-    implementation 'com.google.firebase:firebase-functions:19.0.0'
-    implementation 'com.firebaseui:firebase-ui-firestore:4.3.1'
-    implementation 'com.google.firebase:firebase-analytics:17.1.0'
+    implementation "com.google.android.gms:play-services-maps:17.0.0"
+    implementation "com.google.maps.android:android-maps-utils:$rootProject.googleMapUtilsVersion"
 
-    implementation 'com.firebaseui:firebase-ui-auth:5.0.0'
-    implementation 'com.google.android.gms:play-services-location:17.0.0'
-    implementation 'com.android.installreferrer:installreferrer:1.0'
-    implementation 'com.google.firebase:firebase-core:17.1.0'
-    implementation 'com.crashlytics.sdk.android:crashlytics:2.10.1'
+    implementation "com.google.firebase:firebase-auth:$rootProject.firebaseAuthVersion"
+    implementation "com.google.firebase:firebase-firestore:$rootProject.firebaseFirestoreVersion"
+    implementation "com.google.firebase:firebase-messaging:$rootProject.firebaseMessagingVersion"
+    implementation "com.google.firebase:firebase-functions:$rootProject.firebaseFunctionsVersion"
+    implementation "com.firebaseui:firebase-ui-firestore:$rootProject.firebaseUiVersion"
+    implementation "com.google.firebase:firebase-analytics:$rootProject.firebaseAnaliticsVersion"
+    implementation "com.firebaseui:firebase-ui-auth:$rootProject.firebaseAuthUiVersion"
+    implementation "com.google.firebase:firebase-core:$rootProject.firebaseCoreVersion"
 
-    implementation 'androidx.lifecycle:lifecycle-extensions:2.0.0'
-    implementation 'android.arch.work:work-runtime-ktx:1.0.1'
+    implementation "com.google.android.gms:play-services-location:17.0.0"
+    implementation "com.android.installreferrer:installreferrer:1.0"
 
-    implementation 'org.koin:koin-android:1.0.2'
-    implementation "com.github.bumptech.glide:glide:4.9.0"
-    kapt 'com.github.bumptech.glide:compiler:4.9.0'
+    implementation "com.crashlytics.sdk.android:crashlytics:2.10.1"
 
-    api 'com.jakewharton.timber:timber:4.7.1'
+    implementation "androidx.lifecycle:lifecycle-extensions:2.0.0"
+    implementation "android.arch.work:work-runtime-ktx:1.0.1"
+
+    implementation "org.koin:koin-android:$rootProject.koinVersion"
+    implementation "com.github.bumptech.glide:glide:$rootProject.glideVersion"
+    kapt "com.github.bumptech.glide:compiler:$rootProject.glideVersion"
+
+    api "com.jakewharton.timber:timber:4.7.1"
 
     // Dagger
     implementation "com.google.dagger:dagger-android:$rootProject.dagger"
@@ -89,3 +100,6 @@ dependencies {
     kapt "com.google.dagger:dagger-android-processor:$rootProject.dagger"
 
 }
+
+// Add the following line to the bottom of the file:
+apply plugin: "com.google.gms.google-services"  // Google Play services Gradle plugin

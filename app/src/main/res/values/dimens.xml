@@ -6,7 +6,7 @@
     <dimen name="custom_profile_padding">2dp</dimen>
     <dimen name="app_bar_height">180dp</dimen>
     <dimen name="text_margin">16dp</dimen>
-    <dimen name="btn_width">180dp</dimen>
+    <dimen name="btn_width">160dp</dimen>
     <dimen name="btn_height">56dp</dimen>
     <dimen name="logo_width">300dp</dimen>
     <dimen name="nav_account_image_size">32dp</dimen>

@@ -1,11 +1,13 @@
 package com.craiovadata.groupmap.fcm
 
 import android.os.Bundle
+import com.craiovadata.groupmap.BuildConfig
 import com.craiovadata.groupmap.repo.Repository
 import com.craiovadata.groupmap.tracker.TrackerService
-import com.craiovadata.groupmap.utils_.*
+import com.craiovadata.groupmap.util.*
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.iid.FirebaseInstanceId
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -19,7 +21,7 @@ import java.util.*
 
 class MyMessagingService : FirebaseMessagingService() {
     private val auth by inject<FirebaseAuth>()
-//    private val analytics by inject<FirebaseAnalytics>()
+    private val db by inject<FirebaseFirestore>()
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
@@ -27,16 +29,26 @@ class MyMessagingService : FirebaseMessagingService() {
         repository.sendTokenToServer(token)
     }
 
+    init {
+        Timber.e("MyMessagingService  init")
+    }
+
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
-//        PAYLOAD look
+//        PAYLOAD
 //        group: groupId,
 //        reqPos: requestTime,
 //        to: uidDest
-
         val payload = remoteMessage.data
-        Timber.e("onMessageReceived() fcm payload: $payload")
+        Timber.e("onMessageReceived() fcm payload: ${payload}")
+        if (BuildConfig.DEBUG){
+            val reqTimeDate0 = SimpleDateFormat.getInstance().format(Date())
+            db.collection("testData/${auth.currentUser?.email}/receivedMsg")
+                .document("onMessageReceived").set(hashMapOf("payload" to payload.toString(),
+                    "timestamp" to reqTimeDate0))
+        }
+
         val toUid = payload[UID] ?: return      // destinatarul
 
         logAnalytics(payload)
@@ -49,15 +61,20 @@ class MyMessagingService : FirebaseMessagingService() {
         }
 
         try {
-            val requestTime = payload["reqPos"]?.toLong()   // catch the exception
-
+            val requestTimeString = payload["reqPos"] ?: return  // catch the exception
+            val requestTime = requestTimeString.toLong()   // catch the exception
+            if (BuildConfig.DEBUG){
+                val reqTimeDate = SimpleDateFormat.getInstance().format(Date(requestTime))
+                db.collection("testData/${auth.currentUser?.email}/receivedMsg")
+                    .document(requestTimeString).set(hashMapOf("onMessageReceived" to reqTimeDate ))
+            }
             // functions effects must be idempotent
             // check time to see if already done sending position
             val isRequestNewAndValid = PrefUtils.isValidTimeForLocationRequest(this, requestTime)
             if (isRequestNewAndValid) {
-            val groupId = payload["group"] ?: return
-            startService(TrackerService.newIntent(this, groupId))
-        }
+                val groupId = payload["group"] ?: return
+                startService(TrackerService.newIntent(this, groupId, requestTimeString))
+            }
         } catch (e: NumberFormatException) {
             e.printStackTrace()
         }

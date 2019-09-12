@@ -1,4 +1,4 @@
-package com.craiovadata.groupmap.utils_;/*
+package com.craiovadata.groupmap.util;/*
  * Copyright 2013 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
