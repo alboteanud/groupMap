@@ -29,10 +29,6 @@ class MyMessagingService : FirebaseMessagingService() {
         repository.sendTokenToServer(token)
     }
 
-    init {
-        Timber.e("MyMessagingService  init")
-    }
-
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
@@ -42,12 +38,6 @@ class MyMessagingService : FirebaseMessagingService() {
 //        to: uidDest
         val payload = remoteMessage.data
         Timber.e("onMessageReceived() fcm payload: ${payload}")
-        if (BuildConfig.DEBUG){
-            val reqTimeDate0 = SimpleDateFormat.getInstance().format(Date())
-            db.collection("testData/${auth.currentUser?.email}/receivedMsg")
-                .document("onMessageReceived").set(hashMapOf("payload" to payload.toString(),
-                    "timestamp" to reqTimeDate0))
-        }
 
         val toUid = payload[UID] ?: return      // destinatarul
 
@@ -63,11 +53,7 @@ class MyMessagingService : FirebaseMessagingService() {
         try {
             val requestTimeString = payload["reqPos"] ?: return  // catch the exception
             val requestTime = requestTimeString.toLong()   // catch the exception
-            if (BuildConfig.DEBUG){
-                val reqTimeDate = SimpleDateFormat.getInstance().format(Date(requestTime))
-                db.collection("testData/${auth.currentUser?.email}/receivedMsg")
-                    .document(requestTimeString).set(hashMapOf("onMessageReceived" to reqTimeDate ))
-            }
+
             // functions effects must be idempotent
             // check time to see if already done sending position
             val isRequestNewAndValid = PrefUtils.isValidTimeForLocationRequest(this, requestTime)

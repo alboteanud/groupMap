@@ -25,11 +25,9 @@ import com.craiovadata.groupmap.model.Group
 import com.craiovadata.groupmap.repo.QueryItem
 import com.craiovadata.groupmap.repo.QueryResultsOrException
 import com.craiovadata.groupmap.repo.Repository
-import com.craiovadata.groupmap.signin.SignInViewModelDelegate
 import com.google.firebase.auth.FirebaseAuth
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
-import javax.inject.Inject
 
 class MyGroupsViewModel
 //@Inject constructor(signInViewModelDelegate: SignInViewModelDelegate)

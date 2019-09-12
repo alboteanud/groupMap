@@ -120,9 +120,7 @@ class MyGroupsActivity : BaseActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_my_groups, menu)
         if (viewModel != null) {
-            toolbar.setupProfileMenuItem(
-                viewModel!!, this@MyGroupsActivity
-            )
+            toolbar.setupProfileMenuItem(viewModel!!, this@MyGroupsActivity)
         }
 
         return true
