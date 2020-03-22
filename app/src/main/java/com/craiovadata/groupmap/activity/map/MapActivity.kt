@@ -11,12 +11,17 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NavUtils
+import androidx.core.app.TaskStackBuilder
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.preference.PreferenceManager
+import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.craiovadata.groupmap.R
 import com.craiovadata.groupmap.activity.base.BaseActivity
 import com.craiovadata.groupmap.activity.groupinfo.GroupInfoActivity
+import com.craiovadata.groupmap.activity.mygroups.MyGroupsActivity
 import com.craiovadata.groupmap.markerrenderer.MarkerRenderer
 import com.craiovadata.groupmap.repo.QueryItem
 import com.craiovadata.groupmap.tracker.TrackerService
@@ -55,8 +60,16 @@ class MapActivity : BaseActivity(), OnMapReadyCallback,
         super.onCreate(savedInstanceState)
 
         groupId = intent.getStringExtra(EXTRA_GROUP_ID)
-            ?: throw IllegalArgumentException("no groupId provided")
+        if (groupId==null) navigateUp()
+
         initViews()
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+//        startActivity(Intent(this, MyGroupsActivity::class.java))
+//        return finish()
+        navigateUp()
     }
 
     private fun initViews() {
@@ -273,7 +286,8 @@ class MapActivity : BaseActivity(), OnMapReadyCallback,
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
+        val id = item.itemId
+        return when (id) {
             R.id.menu_item_bound_users -> {
                 boundUsersOnMap()
                 return true
@@ -290,6 +304,9 @@ class MapActivity : BaseActivity(), OnMapReadyCallback,
             R.id.menu_item_exit -> {
                 Util.buildAlertExitGroup(this, groupData?.groupName) {
                     viewModel?.onQuitGroup(groupId!!)
+                    getDefaultSharedPreferences(this).edit().putString(
+                        MyGroupsActivity.key_saved_group_id, null
+                    ).apply()
                     finish()
                 }
                 return true
@@ -302,7 +319,22 @@ class MapActivity : BaseActivity(), OnMapReadyCallback,
                 viewModel?.allowLocationUpdates(groupId!!)
                 return true
             }
+            android.R.id.home -> {
+                navigateUp()
+                return true
+            }
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun navigateUp() {
+        val upIntent = NavUtils.getParentActivityIntent(this) ?: Intent()
+        upIntent.action = null
+        if (NavUtils.shouldUpRecreateTask(this, upIntent) || isTaskRoot) {
+//    Log.v(logTag, "Recreate back stack");
+            TaskStackBuilder.create(this).addNextIntentWithParentStack(upIntent).startActivities()
+        } else {
+            NavUtils.navigateUpTo(this, upIntent);
         }
     }
 

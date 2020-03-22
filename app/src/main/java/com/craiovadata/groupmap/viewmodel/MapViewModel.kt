@@ -84,6 +84,7 @@ class MapViewModel : ViewModel(), KoinComponent {
     }
 
     fun onQuitGroup(groupId: String) {
+
         repository.exitGroup(groupId)
     }
 

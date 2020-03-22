@@ -51,8 +51,8 @@ class TrackerService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val groupId = intent?.getStringExtra(EXTRA_GROUP_ID)
-            ?: throw IllegalArgumentException("group Id not existent")
-        if (groupId == DEFAULT_GROUP) {
+
+        if (groupId == null || groupId == DEFAULT_GROUP) {
             finishService()
             return super.onStartCommand(intent, flags, startId)
         }
@@ -63,7 +63,8 @@ class TrackerService : Service() {
                 .document(timestamp!!).set(hashMapOf("onStartCommand" to true), SetOptions.merge())
         }
 
-        val permission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+        val permission =
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
         if (permission == PackageManager.PERMISSION_GRANTED) {
             //        getLocation(groupId)
             goForeground()

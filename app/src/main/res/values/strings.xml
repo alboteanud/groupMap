@@ -1,10 +1,12 @@
 <resources>
     <string name="app_name">Group map</string>
+    <string name="title_activity_entry">Group map</string>
 
-    <string name="title_activity_map">Group map</string>
+
+    <string name="title_activity_map">Map</string>
     <string name="title_activity_group_info">Group info</string>
     <string name="title_activity_create_group">New group</string>
-    <string name="title_activity_entry">Welcome to Group Map</string>
+
     <string name="title_activity_share_key">Join group</string>
     <string name="title_activity_control_panel">Control panel</string>
     <string name="title_activity_new_group">New group</string>
@@ -42,7 +44,7 @@
     <string name="label_log_out">Log out</string>
     <string name="title_activity_my_profile">My profile</string>
     <string name="label_control_panel">Control panel</string>
-    <string name="label_log_in">Log in</string>
+    <string name="label_log_in">Get Started</string>
     <string name="action_bound_users">Bound users on map</string>
     <string name="wellcome_text">Wellcome to Group Map !</string>
     <string name="label_menu_privacy_policy">Privacy policy</string>

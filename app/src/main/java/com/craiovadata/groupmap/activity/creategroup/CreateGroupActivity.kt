@@ -8,6 +8,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import com.craiovadata.groupmap.R
 import com.craiovadata.groupmap.activity.base.BaseActivity
 import com.craiovadata.groupmap.activity.map.MapActivity
 import com.craiovadata.groupmap.activity.mygroups.MyGroupsActivity
@@ -21,8 +22,8 @@ class CreateGroupActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(com.craiovadata.groupmap.R.layout.activity_create_group)
-        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        setContentView(R.layout.activity_create_group)
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         // The model

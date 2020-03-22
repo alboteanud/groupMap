@@ -48,7 +48,7 @@ class ControlPanelActivity : BaseActivity(), View.OnClickListener {
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.btn_my_groups -> startActivity(Intent(this, MyGroupsActivity::class.java))
-            R.id.buttonPrivacyPolicy -> goToPrivacyPolicy(v)
+            R.id.buttonPrivacyPolicy -> goToPrivacyPolicy()
             R.id.btn_my_profile -> startActivity(Intent(this, MyProfileActivity::class.java))
 //          ->  DummyUsersUtils.populateDefaultGroup()
         }

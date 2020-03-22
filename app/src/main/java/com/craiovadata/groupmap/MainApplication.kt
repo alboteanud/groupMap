@@ -7,7 +7,6 @@ import timber.log.Timber
 
 class MainApplication : Application() {
 
-
     override fun onCreate() {
         // ThreeTenBP for times and dates, called before super to be available for objects
 //        AndroidThreeTen.init(this)

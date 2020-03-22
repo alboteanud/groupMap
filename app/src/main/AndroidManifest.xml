@@ -23,11 +23,12 @@
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup,GoogleAppIndexingWarning">
 
-        <!-- Required for apps targeting API 28 and above and using Google Maps. -->
+        <!-- Required for apps targeting API 28 and above and using Google Maps -->
         <activity
             android:name=".activity.mygroups.MyGroupsActivity"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"
+           >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

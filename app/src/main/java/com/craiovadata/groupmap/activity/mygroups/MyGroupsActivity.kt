@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.craiovadata.groupmap.R
 import com.craiovadata.groupmap.activity.base.BaseActivity
 import com.craiovadata.groupmap.activity.map.MapActivity
@@ -24,9 +25,19 @@ import timber.log.Timber
 
 
 class MyGroupsActivity : BaseActivity() {
+    companion object {
+        const val key_saved_group_id = "key_group_id"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val savedGroupId = getDefaultSharedPreferences(this).getString(key_saved_group_id, null)
+        if (savedGroupId!=null &&
+                intent.action=="android.intent.action.MAIN") {
+            startActivity(MapActivity.newIntent(this@MyGroupsActivity, savedGroupId))
+            return finish()
+        }
 
         setContentView(R.layout.activity_my_groups)
         setSupportActionBar(toolbar)
@@ -40,9 +51,8 @@ class MyGroupsActivity : BaseActivity() {
     }
 
     private fun checkGooglePlayServices() {
-        val statusServices = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
         // success == 0
-        when (statusServices) {
+        when (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)) {
             ConnectionResult.SERVICE_MISSING -> {
                 Toast.makeText(this, "Google Play SERVICE_MISSING", Toast.LENGTH_SHORT).show()
                 GoogleApiAvailability.getInstance().makeGooglePlayServicesAvailable(this)
@@ -112,6 +122,7 @@ class MyGroupsActivity : BaseActivity() {
         MyGroupsListAdapter.ItemClickListener<MyGroupsViewHolder> {
         override fun onItemClick(holder: MyGroupsViewHolder) {
             holder.groupId?.let {
+                getDefaultSharedPreferences(this@MyGroupsActivity).edit().putString(key_saved_group_id, it).apply()
                 startActivity(MapActivity.newIntent(this@MyGroupsActivity, it))
             }
         }
@@ -129,11 +140,13 @@ class MyGroupsActivity : BaseActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_log_out -> {
-                AuthUI.getInstance().signOut(this)
+                getDefaultSharedPreferences(this).edit().putString(key_saved_group_id, null).apply()
+//                AuthUI.getInstance().signOut(this)
+                logOut()
                 return true
             }
             R.id.menu_privacy_policy -> {
-               goToPrivacyPolicy(item.actionView)
+                goToPrivacyPolicy()
 //                startService(Intent(this, MyMessagingService::class.java))
                 return true
             }

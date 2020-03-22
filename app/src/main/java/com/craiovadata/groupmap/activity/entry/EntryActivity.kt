@@ -28,8 +28,7 @@ import kotlinx.android.synthetic.main.activity_entry.*
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
-class EntryActivity : BaseActivity(), View.OnClickListener {
-    //    private var groupShareKey: String? = null
+class EntryActivity : BaseActivity() {
     private var groupData: GroupSkDisplayQueryItem? = null
     private lateinit var viewModel: EntryGroupViewModel
 
@@ -37,9 +36,22 @@ class EntryActivity : BaseActivity(), View.OnClickListener {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(EntryGroupViewModel::class.java)
         verifyAndNavigate()
-        initViews()
+
+        setContentView(R.layout.activity_entry)
+        setSupportActionBar(toolbar)
+        btn_demo.setOnClickListener {
+            startActivity(MapActivity.newIntent(this, DEFAULT_GROUP))
+        }
+        btn_get_started.setOnClickListener {
+            showLoginScreen(this)
+        }
+        btn_log_out.setOnClickListener {
+            logOut()
+        }
 
     }
+
+
 
     private fun verifyAndNavigate() {
         findShareKey { groupShareKey ->
@@ -49,7 +61,7 @@ class EntryActivity : BaseActivity(), View.OnClickListener {
                 it.data?.let { data ->
                     val loggedIn = auth.currentUser != null
                     if (loggedIn) {
-                        if (viewModel.canNavigaitToJoin()){
+                        if (viewModel.canNavigaitToJoin()) {
                             viewModel.doneNavigatingToJoinActivity()
                             goToJoinActivity(data)
                         }
@@ -60,7 +72,7 @@ class EntryActivity : BaseActivity(), View.OnClickListener {
                 }
             })
 
-            viewModel.navigateToJoinActivity.observe(this, Observer{
+            viewModel.navigateToJoinActivity.observe(this, Observer {
 
             })
         }
@@ -102,25 +114,6 @@ class EntryActivity : BaseActivity(), View.OnClickListener {
         }
     }
 
-    private fun initViews() {
-        setContentView(R.layout.activity_entry)
-        setSupportActionBar(toolbar)
-        btn_demo.setOnClickListener(this)
-        btn_log_in.setOnClickListener(this)
-        btn_log_out.setOnClickListener(this)
-//        btn_privacy.setOnClickListener(this)
-    }
-
-    override fun onClick(v: View?) {
-        when (v?.id) {
-            R.id.btn_demo -> startActivity(MapActivity.newIntent(this, DEFAULT_GROUP))
-            R.id.btn_log_in -> showLoginScreen(this)
-            R.id.btn_log_out -> AuthUI.getInstance().signOut(this)
-            R.id.btn_my_groups -> startActivity(Intent(this, MyGroupsActivity::class.java))
-//            R.id.btn_privacy -> goToPrivacyPolicy(v)
-        }
-    }
-
     override fun onLogin() {
         super.onLogin()
         updateUI(true)
@@ -132,7 +125,7 @@ class EntryActivity : BaseActivity(), View.OnClickListener {
     }
 
     private fun updateUI(loggedIn: Boolean) {
-        btn_log_in?.isVisible = !loggedIn
+        btn_get_started?.isVisible = !loggedIn
         btn_log_out?.isVisible = loggedIn
     }
 
@@ -181,8 +174,7 @@ class EntryActivity : BaseActivity(), View.OnClickListener {
         appLinkData?.let {
             val segments = appLinkData.pathSegments
             if (segments.size >= 2 && segments[0] == "group") {
-                val shareKey = segments[1]
-                return shareKey
+                return segments[1]
             }
         }
         return null
