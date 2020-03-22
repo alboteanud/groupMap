@@ -7,3 +7,5 @@ Use this app, create a family group and let your wife track your position on the
 This app is useful for your family, bicycle groups,  school kids tracking, trips and other kinds of groups.  
 
 Keep together!
+
+![Screenshot of Group map application](https://lh3.googleusercontent.com/ARoo23kh6MPUEFgG7RYlWRMH1aaEzaFgVcnhXt23qU0xICoMpsk45kzKJ_2oiJEdmUoD=w1440-h620-rw)
